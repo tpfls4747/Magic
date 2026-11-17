@@ -1,8 +1,9 @@
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useEffect, useRef, useState } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import * as THREE from 'three'
 import { SEAT_SWAP } from './layout'
 import { Ticket } from './Ticket'
+import { useExhibitInteraction } from './useExhibitInteraction'
 import type { TicketInfo } from './ticketArt'
 
 /**
@@ -31,9 +32,6 @@ const POSE_B = pose([0.15, -0.065, -0.07], [0.08, -0.16, -0.1])
 
 /** 교환에 걸리는 시간 (초) */
 const SWAP_DURATION = 1.25
-/** 모바일 탭 후 원래 자리로 돌아오기까지 (ms) */
-const TOUCH_RETURN_DELAY = 3200
-
 
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
@@ -51,39 +49,12 @@ export function SeatSwapExhibit({
   animate: boolean
   castShadow: boolean
 }) {
-
   const ticketA = useRef<THREE.Group>(null)
   const ticketB = useRef<THREE.Group>(null)
-  const [swapped, setSwapped] = useState(false)
   /** 0 = 원래 자리, 1 = 교환된 자리 (선형 진행값, 화면에는 이징을 적용) */
   const progress = useRef(0)
-  const touchTimer = useRef<number | undefined>(undefined)
-
-  useEffect(() => () => window.clearTimeout(touchTimer.current), [])
-  useEffect(() => () => void (document.body.style.cursor = ''), [])
-
-  // ── 인터랙션: 마우스는 hover, 터치는 탭(일정 시간 뒤 자동 복귀)
-  //    탭은 pointerup 에서 처리 — 화면을 끌어 스크롤하면 브라우저가 pointercancel 을 보내므로
-  //    스크롤하려다 티켓이 바뀌는 일이 없습니다.
-  const onOver = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === 'touch') return
-    e.stopPropagation()
-    document.body.style.cursor = 'pointer'
-    setSwapped(true)
-  }
-  const onOut = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === 'touch') return
-    document.body.style.cursor = ''
-    setSwapped(false)
-  }
-  const onTap = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType !== 'touch') return
-    e.stopPropagation()
-    window.clearTimeout(touchTimer.current)
-    const next = !swapped
-    setSwapped(next)
-    if (next) touchTimer.current = window.setTimeout(() => setSwapped(false), TOUCH_RETURN_DELAY)
-  }
+  // 마우스는 hover, 터치는 탭 (작품 공통 인터랙션)
+  const { active: swapped, handlers } = useExhibitInteraction()
 
   useFrame(({ clock }, delta) => {
     const a = ticketA.current
@@ -146,7 +117,7 @@ export function SeatSwapExhibit({
       <Ticket ref={ticketB} info={TICKETS[1]} castShadow={castShadow} />
 
       {/* 마우스·터치 감지 영역 — 움직이는 티켓보다 넉넉하게, 화면에는 보이지 않음 */}
-      <mesh onPointerOver={onOver} onPointerOut={onOut} onPointerUp={onTap}>
+      <mesh {...handlers}>
         <boxGeometry args={[1.05, 0.62, 0.55]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>

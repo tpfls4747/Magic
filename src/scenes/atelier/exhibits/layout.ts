@@ -27,3 +27,14 @@ export const SEAT_SWAP = {
    */
   extent: { width: 1.2, height: 0.62 },
 } as const
+
+const [px, , pz] = PEDESTALS[2].position
+
+/** 작품 2 — Sign-up Redesign (오른쪽 전시대의 3D 스마트폰) */
+export const SIGN_UP = {
+  /** 휴대폰 중심 — 아래쪽이 상판 위로 약 0.14m 떠 있도록 */
+  center: new THREE.Vector3(px, PEDESTAL_TOP + 0.52, pz),
+  yaw: yawToward(px, pz, OVERVIEW_CAMERA),
+  /** 근접 구도용 대략의 범위 (분리되는 UI 레이어 포함) */
+  extent: { width: 0.62, height: 0.86 },
+} as const

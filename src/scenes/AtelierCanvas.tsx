@@ -10,6 +10,7 @@ import { Floor } from './atelier/Floor'
 import { Lighting } from './atelier/Lighting'
 import { Pedestals } from './atelier/Pedestals'
 import { SeatSwapExhibit } from './atelier/exhibits/SeatSwapExhibit'
+import { SignupExhibit } from './atelier/exhibits/SignupExhibit'
 import './AtelierCanvas.css'
 
 /** The Floating Atelier — 3D 전시관 */
@@ -41,6 +42,7 @@ export function AtelierCanvas() {
           <Floor quality={quality} />
           <Pedestals />
           <SeatSwapExhibit animate={animate} castShadow={quality === 'high'} />
+          <SignupExhibit animate={animate} castShadow={quality === 'high'} />
           <Atmosphere quality={quality} animate={animate} />
         </Suspense>
       </Canvas>

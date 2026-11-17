@@ -24,6 +24,12 @@
 |---|---|
 | ![데스크톱](docs/screenshots/step2-desktop.jpg) | ![모바일](docs/screenshots/step2-mobile.jpg) |
 
+### 작품 2 — Sign-up Redesign (근접 촬영)
+
+기존 화면 → UI 요소가 화면 위로 떠오르며 분리 → 개선된 화면으로 정렬 (화면 내용은 임시 데모)
+
+![Sign-up Redesign](docs/screenshots/step4-signup-sequence.jpg)
+
 ### 스크롤 투어 — 작품 근접 화면
 
 아래로 스크롤하면 카메라가 Seat Swap 전시대로 이동하고 프로젝트 소개가 나타납니다.
@@ -90,6 +96,10 @@ src/
 | `exhibits/SeatSwapExhibit.tsx` | 작품 1: 떠 있는 두 티켓, hover/탭 시 좌석 교환 애니메이션 |
 | `exhibits/Ticket.tsx` | 노치·두께·금박 모서리·금박 테두리/인장을 가진 입체 티켓 |
 | `exhibits/ticketArt.ts` | 티켓 인쇄면(잉크·금박·뒷면 무늬) 캔버스 텍스처 |
+| `exhibits/SignupExhibit.tsx` | 작품 2: 떠 있는 스마트폰, hover/탭 시 UI 레이어 분리 → 개선 화면 정렬 |
+| `exhibits/Phone.tsx`, `phoneGeometry.ts` | 금속 프레임·후면 유리·베젤·전면 유리·카메라 모듈을 가진 3D 스마트폰 |
+| `exhibits/signupScreens.ts` | 기존/개선 회원가입 데모 화면 (요소별 캔버스 텍스처) |
+| `exhibits/useExhibitInteraction.ts` | 작품 공통 인터랙션 (마우스 hover / 터치 탭) |
 
 외부 3D 모델·HDRI 없이 모두 코드로 생성합니다.
 
@@ -108,6 +118,7 @@ src/
 - [x] STEP 2 — 3D 전시관 첫 장면 (The Floating Atelier)
 - [x] STEP 3 — 작품 1: Seat Swap (공연 좌석 교환 UX)
 - [x] STEP 3-1 — 스크롤 카메라 투어 (Seat Swap 근접 화면)
-- [ ] 작품 2·3 (스마트폰, 브라우저)
+- [x] STEP 4 — 작품 2: Sign-up Redesign (3D 스마트폰, 데모 화면)
+- [ ] 작품 3 (브라우저)
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션
