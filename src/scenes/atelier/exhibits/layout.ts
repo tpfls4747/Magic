@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { TourProjectId } from '@/lib/tour'
 import { PEDESTALS } from '../constants'
 import { PEDESTAL_TOP } from '../Pedestals'
 
@@ -77,8 +78,11 @@ export const SIGN_UP = {
   },
 } as const
 
-/** 스크롤 투어 순서 — 전체 구도(0) 다음 1번, 2번 작품 */
-export const TOUR_EXHIBITS: readonly TourExhibit[] = [
-  { ...SEAT_SWAP, viewYaw: SEAT_SWAP.yaw },
-  SIGN_UP,
-]
+/**
+ * 투어에 포함되는 작품의 배치 — 프로젝트 id 로 찾습니다.
+ * 순서는 tour.ts 의 TOUR_PROJECT_IDS 가 정하고, 새 작품은 여기와 그 목록에 한 줄씩 추가합니다.
+ */
+export const EXHIBIT_LAYOUT: Record<TourProjectId, TourExhibit> = {
+  'seat-swap': { ...SEAT_SWAP, viewYaw: SEAT_SWAP.yaw },
+  'signup-redesign': SIGN_UP,
+}

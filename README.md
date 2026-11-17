@@ -24,6 +24,12 @@
 |---|---|
 | ![데스크톱](docs/screenshots/step2-desktop.jpg) | ![모바일](docs/screenshots/step2-mobile.jpg) |
 
+### 작품 바로가기 — Works 내비게이션 · 3D 오브젝트 클릭
+
+| 데스크톱 (상단 Works 메뉴, 3D 작품 hover 안내) | 모바일 (바로가기 · Works 메뉴 · Back to Gallery) |
+|---|---|
+| ![Works 데스크톱](docs/screenshots/step5-nav-desktop.jpg) | ![Works 모바일](docs/screenshots/step5-nav-mobile.jpg) |
+
 ### 작품 2 — Sign-up Redesign (근접 촬영)
 
 기존 화면 → UI 요소가 화면 위로 떠오르며 분리 → 개선된 화면으로 정렬 (화면 내용은 임시 데모)
@@ -113,6 +119,19 @@ src/
 - `src/sections/ExhibitPanel.tsx` — 프로젝트 소개 패널. `projects.ts` 의 `caseStudyUrl` 이 있으면 링크, 없으면 '준비 중' 비활성 버튼으로 표시됩니다.
 - 애니메이션 감소 설정에서는 이동 과정 없이 두 화면이 바로 전환됩니다.
 
+### 직접 이동 (작품 클릭 · Works 메뉴 · Back to Gallery · Esc)
+
+탐색 상태는 하나(스크롤 위치)로 통합되어 있습니다. `goToStop(n)`(`src/lib/tour.ts`)을 호출하면:
+
+1. 스크롤 위치를 목표 작품의 감상 구간으로 즉시 맞춥니다 → 투어 진행도도 목표와 일치
+2. 카메라만 현재 구도에서 목표 구도로 곧장 비행합니다 (중간 작품을 거치지 않음, `tour.flight`)
+3. 비행이 끝나면 진행도가 이미 목표와 같으므로 점프 없이 스크롤 투어로 이어집니다
+4. 비행 중에 스크롤을 시작하면 비행을 멈추고 그 자리에서 스크롤로 넘어갑니다
+
+- 3D 작품: 작품 앞이 아닐 때는 클릭/탭 = 이동, 작품 앞에서만 hover/탭 = 작품 애니메이션 (`useExhibitInteraction`)
+- 키보드: Works 메뉴는 Tab·화살표·Home/End·Enter, 좁은 화면 메뉴는 Esc 로 닫기, 작품 화면에서 Esc = 전시관으로. 이동 후 해당 화면 제목으로 포커스 이동
+- 새 작품 추가: `projects.ts` 데이터 + `TOUR_PROJECT_IDS` + `EXHIBIT_LAYOUT` 에 한 줄씩 — 메뉴·패널·카메라 구도·스크롤 구간이 자동으로 늘어납니다
+
 `@/` 경로 별칭은 `src/`를 가리킵니다. (예: `import { projects } from '@/data/projects'`)
 
 ## 진행 상태
@@ -123,6 +142,7 @@ src/
 - [x] STEP 3-1 — 스크롤 카메라 투어 (Seat Swap 근접 화면)
 - [x] STEP 4 — 작품 2: Sign-up Redesign (3D 스마트폰, 데모 화면)
 - [x] STEP 4-1 — 스크롤 투어 확장 (전체 → Seat Swap → Sign-up Redesign)
+- [x] 자유 탐색 — 3D 작품 클릭, Works 메뉴, Back to Gallery, 키보드
 - [ ] 작품 3 (브라우저)
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

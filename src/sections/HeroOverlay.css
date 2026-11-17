@@ -2,6 +2,8 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
+  /* 상단 Works 메뉴가 작품 패널보다 위에 오도록 */
+  z-index: 3;
   color: var(--color-ink);
 }
 
@@ -23,8 +25,11 @@
   right: 0;
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: clamp(18px, 3vw, 36px) clamp(16px, 4vw, 56px);
+  align-items: center;
+  gap: 16px;
+  padding: clamp(14px, 2.4vw, 30px) clamp(16px, 4vw, 56px);
+  padding-left: max(clamp(16px, 4vw, 56px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(16px, 4vw, 56px), env(safe-area-inset-right, 0px));
   font-size: 11px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -36,10 +41,6 @@
   letter-spacing: 0.32em;
 }
 
-.hero-overlay__meta {
-  opacity: 0.62;
-}
-
 .hero-overlay__title {
   position: absolute;
   left: 0;
@@ -48,6 +49,17 @@
   text-align: center;
   padding: 0 16px;
   transform: translateY(var(--reveal-y, 0px));
+}
+
+.hero-overlay__title h1:focus {
+  outline: none;
+}
+
+/* 좁은 화면: 제목 아래 작품 바로가기가 들어가므로 조금 위로 */
+@media (max-width: 760px) {
+  .hero-overlay__title {
+    bottom: clamp(84px, 11vh, 110px);
+  }
 }
 
 .hero-overlay__eyebrow {
@@ -96,9 +108,6 @@
 }
 
 @media (max-width: 600px) {
-  .hero-overlay__meta {
-    display: none;
-  }
   .hero-overlay__mark {
     font-size: 13px;
   }

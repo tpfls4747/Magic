@@ -2,8 +2,8 @@ import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { tour } from '@/lib/tour'
-import { OVERVIEW_CAMERA, TOUR_EXHIBITS, type TourExhibit } from './exhibits/layout'
+import { tour, TOUR_PROJECT_IDS } from '@/lib/tour'
+import { EXHIBIT_LAYOUT, OVERVIEW_CAMERA, type TourExhibit } from './exhibits/layout'
 
 /** 기본 시점: 사람 눈높이에서 홀 깊숙이 바라보는 1점 투시 구도 */
 const BASE_POSITION = OVERVIEW_CAMERA
@@ -73,6 +73,7 @@ const SEGMENT_ARC = [
 ]
 
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 /**
  * 카메라 리그
@@ -108,7 +109,10 @@ export function CameraRig({
       target: LOOK_AT.clone(),
     }
     // 정류장 구도: 0 = 전체, 1.. = 작품 순서
-    const stops = [overview, ...TOUR_EXHIBITS.map((ex) => exhibitShot(ex, aspect, fov))]
+    const stops = [
+      overview,
+      ...TOUR_PROJECT_IDS.map((id) => exhibitShot(EXHIBIT_LAYOUT[id], aspect, fov)),
+    ]
     return { fov, stops }
   }, [size.width, size.height])
 
@@ -149,6 +153,12 @@ export function CameraRig({
   const forward = useRef(new THREE.Vector3())
   const right = useRef(new THREE.Vector3())
   const initialized = useRef(false)
+  /** 패럴랙스를 더하기 전의 기준 구도 — 직접 이동의 출발점으로 기록합니다 */
+  const basePos = useRef(new THREE.Vector3())
+  const baseLook = useRef(LOOK_AT.clone())
+  const flightFrom = useRef<{ id: number; position: THREE.Vector3; target: THREE.Vector3 } | null>(
+    null,
+  )
 
   useFrame((_, delta) => {
     const cam = cameraRef.current
@@ -157,25 +167,50 @@ export function CameraRig({
     const { stops } = shots
     const last = stops.length - 1
 
-    // 투어 위치(0 = 전체, 1 = 작품 1, 2 = 작품 2 …) → 현재 구간과 구간 안의 진행값
-    // 애니메이션 감소 설정에서는 이동 과정 없이 가장 가까운 정류장으로 바로 전환합니다.
-    const pos = THREE.MathUtils.clamp(tour.progress, 0, last)
-    const segment = Math.min(Math.floor(pos), last - 1)
-    const local = pos - segment
-    const e = reducedMotion ? (local < 0.5 ? 0 : 1) : easeInOutSine(local)
-    const from = stops[segment]
-    const to = stops[segment + 1]
-    const arc = Math.sin(e * Math.PI) * (reducedMotion ? 0 : 1)
-    const bend = SEGMENT_ARC[Math.min(segment, SEGMENT_ARC.length - 1)]
+    const flight = tour.flight
+    if (flight && stops[flight.to]) {
+      // ── 직접 이동: 비행이 시작된 순간의 구도에서 목표 구도까지 곧장 이동 (중간 작품을 거치지 않음)
+      if (!flightFrom.current || flightFrom.current.id !== flight.id) {
+        flightFrom.current = {
+          id: flight.id,
+          position: basePos.current.clone(),
+          target: baseLook.current.clone(),
+        }
+      }
+      const from = flightFrom.current
+      const to = stops[flight.to]
+      const e = reducedMotion ? 1 : easeInOutCubic(flight.t)
+      const arc = Math.sin(e * Math.PI)
+      desiredPos.current.lerpVectors(from.position, to.position, e)
+      // 홀을 가로지를 때는 거리에 비례해 살짝 뒤로 물러나며 떠오름 — 작품을 스치지 않도록
+      const lateral = Math.abs(to.position.x - from.position.x)
+      desiredPos.current.y += arc * 0.16
+      desiredPos.current.z += arc * Math.min(1.4, lateral * 0.25)
+      desiredLook.current.lerpVectors(from.target, to.target, e)
+    } else {
+      flightFrom.current = null
+      // ── 스크롤 투어: 투어 위치(0 = 전체, 1 = 작품 1, 2 = 작품 2 …) → 현재 구간과 구간 안의 진행값
+      // 애니메이션 감소 설정에서는 이동 과정 없이 가장 가까운 정류장으로 바로 전환합니다.
+      const pos = THREE.MathUtils.clamp(tour.progress, 0, last)
+      const segment = Math.min(Math.floor(pos), last - 1)
+      const local = pos - segment
+      const e = reducedMotion ? (local < 0.5 ? 0 : 1) : easeInOutSine(local)
+      const from = stops[segment]
+      const to = stops[segment + 1]
+      const arc = Math.sin(e * Math.PI) * (reducedMotion ? 0 : 1)
+      const bend = SEGMENT_ARC[Math.min(segment, SEGMENT_ARC.length - 1)]
 
-    // 위치와 시선을 함께 보간 + 구간별 완만한 우회 곡선
-    desiredPos.current.lerpVectors(from.position, to.position, e)
-    desiredPos.current.y += arc * bend.lift
-    desiredPos.current.z += arc * bend.back
-    desiredLook.current.lerpVectors(from.target, to.target, e)
+      // 위치와 시선을 함께 보간 + 구간별 완만한 우회 곡선
+      desiredPos.current.lerpVectors(from.position, to.position, e)
+      desiredPos.current.y += arc * bend.lift
+      desiredPos.current.z += arc * bend.back
+      desiredLook.current.lerpVectors(from.target, to.target, e)
+    }
+    basePos.current.copy(desiredPos.current)
+    baseLook.current.copy(desiredLook.current)
 
     // 전체 구도에서 멀어질수록(작품 가까이) 패럴랙스를 약하게
-    const nearExhibit = Math.min(pos, 1)
+    const nearExhibit = flight ? (flight.to === 0 ? 1 - flight.t : 1) : Math.min(tour.progress, 1)
     // 마우스 패럴랙스: 현재 시선 기준의 좌우/상하로, 작품에 가까울수록 약하게
     const amount = THREE.MathUtils.lerp(1, PARALLAX_AT_EXHIBIT, easeInOutSine(nearExhibit))
     const { x, y } = pointer.current

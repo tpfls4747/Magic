@@ -1,4 +1,5 @@
 import type { ExhibitObject, Project } from '@/data/projects'
+import { GALLERY_STOP, goToStop } from '@/lib/tour'
 import './ExhibitPanel.css'
 
 /** 작품별 인터랙션 안내 문구 */
@@ -29,14 +30,23 @@ export function ExhibitPanel({ project }: { project: Project }) {
           <span aria-hidden="true">·</span>
           <span>{project.tags.join(' / ')}</span>
         </p>
-        <h2 id={headingId} className="exhibit-panel__title">
+        <h2 id={headingId} className="exhibit-panel__title" tabIndex={-1}>
           {project.title}
         </h2>
         <p className="exhibit-panel__subtitle">{project.subtitle}</p>
         <p className="exhibit-panel__summary">{project.summary}</p>
 
         <div className="exhibit-panel__actions">
-          <CaseStudyButton id={project.id} url={project.caseStudyUrl} />
+          <div className="exhibit-panel__buttons">
+            <CaseStudyButton id={project.id} url={project.caseStudyUrl} />
+            <button
+              type="button"
+              className="back-button"
+              onClick={() => goToStop(GALLERY_STOP, { focus: true })}
+            >
+              <span aria-hidden="true">←</span> Back to Gallery
+            </button>
+          </div>
           <p className="exhibit-panel__hint">
             <span className="only-hover">{EXHIBIT_HINT[project.object].hover}</span>
             <span className="only-touch">{EXHIBIT_HINT[project.object].touch}</span>
@@ -62,7 +72,14 @@ function CaseStudyButton({ id, url }: { id: string; url?: string }) {
     )
   }
   return (
-    <button type="button" className="case-button" disabled aria-describedby={noteId}>
+    // disabled 대신 aria-disabled — 키보드·화면 낭독기로도 '준비 중' 상태를 확인할 수 있도록 포커스는 받되 동작하지 않음
+    <button
+      type="button"
+      className="case-button"
+      aria-disabled="true"
+      aria-describedby={noteId}
+      onClick={(e) => e.preventDefault()}
+    >
       View Case Study
       <span id={noteId} className="case-button__badge">
         준비 중

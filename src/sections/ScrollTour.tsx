@@ -1,8 +1,15 @@
 import { useRef, type CSSProperties } from 'react'
-import { getProject, type Project } from '@/data/projects'
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery'
-import { gsap, useGSAP } from '@/lib/gsap'
-import { tour, TOUR_PROJECT_IDS } from '@/lib/tour'
+import { gsap, ScrollTrigger, useGSAP } from '@/lib/gsap'
+import {
+  GALLERY_STOP,
+  registerTourNavigator,
+  setActiveStop,
+  tour,
+  TOUR_PROJECTS,
+  type Flight,
+  type GoToOptions,
+} from '@/lib/tour'
 import { ExhibitPanel } from './ExhibitPanel'
 import './ScrollTour.css'
 
@@ -16,6 +23,16 @@ const DWELL = 0.9
 const LAST_DWELL = 0.6
 /** 감상 구간 바깥에서 이 거리(전체 대비 비율) 안에 멈추면 감상 구간으로 부드럽게 맞춥니다 */
 const SNAP_WINDOW = 0.045
+/** 직접 이동 시 감상 구간 안의 도착 지점 (구간 시작 0 ~ 끝 1) — 앞뒤로 스크롤할 여유를 둡니다 */
+const ARRIVE_AT = 0.35
+/** 직접 이동 비행 시간 (초): 기본 + 정류장 거리당 추가 */
+const FLIGHT_BASE = 1.4
+const FLIGHT_PER_STOP = 0.45
+/** 이 거리 안이면 '정류장에 머무는 중'으로 봅니다 (작품 인터랙션 활성화 기준) */
+const AT_STOP = 0.12
+
+/** 스크롤을 시작하는 키 — 직접 이동 중에 누르면 비행을 멈추고 스크롤로 넘깁니다 */
+const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '])
 
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
@@ -78,9 +95,7 @@ function gentleSnap(stops: { start: number; end: number }[]) {
 export function ScrollTour() {
   const trackRef = useRef<HTMLDivElement>(null)
   const reducedMotion = usePrefersReducedMotion()
-  const projects = TOUR_PROJECT_IDS.map((id) => getProject(id)).filter(
-    (p): p is Project => Boolean(p),
-  )
+  const projects = TOUR_PROJECTS
   const { segments, stops } = buildSegments(projects.length)
 
   useGSAP(
@@ -91,14 +106,31 @@ export function ScrollTour() {
         document.querySelector<HTMLElement>(`[data-tour="panel-${p.id}"]`),
       )
       const last = projects.length
+      // 정류장별로 보여야 할 텍스트: [메인 제목, 스크롤 안내, 작품 패널…]
+      const elements = [title, hint, ...panels]
+      const visibleAt = (stop: number) =>
+        elements.map((_, j) => (stop === GALLERY_STOP ? j < 2 : j - 1 === stop))
 
-      const apply = (p: number) => {
+      /** 직접 이동 중: 출발 시 보이던 텍스트는 먼저 사라지고, 도착 화면의 텍스트가 마지막에 나타남 */
+      let flightStartAlpha: number[] = []
+      const applyFlight = (f: Flight) => {
+        const out = 1 - smoothstep(0, 0.4, f.t)
+        const arrive = smoothstep(0.62, 1, f.t)
+        const target = visibleAt(f.to)
+        elements.forEach((el, j) => {
+          const leaving = (flightStartAlpha[j] ?? 0) * out
+          reveal(el, target[j] ? Math.max(leaving, arrive) : leaving, j === 0 ? -24 : 20)
+        })
+        setActiveStop(f.t > 0.62 ? f.to : null)
+      }
+
+      const applyScroll = (p: number) => {
+        const nearest = Math.round(p)
+        setActiveStop(Math.abs(p - nearest) < AT_STOP ? nearest : null)
         if (reducedMotion) {
           // 애니메이션 감소: 가장 가까운 정류장의 화면으로 바로 전환
-          const nearest = Math.round(p)
-          reveal(title, nearest === 0 ? 1 : 0, 0)
-          reveal(hint, nearest === 0 ? 1 : 0, 0)
-          panels.forEach((el, i) => reveal(el, nearest === i + 1 ? 1 : 0, 0))
+          const target = visibleAt(nearest)
+          elements.forEach((el, j) => reveal(el, target[j] ? 1 : 0, 0))
           return
         }
         reveal(title, 1 - smoothstep(0.02, 0.3, p), -24)
@@ -111,12 +143,15 @@ export function ScrollTour() {
         })
       }
 
+      const apply = () => (tour.flight ? applyFlight(tour.flight) : applyScroll(tour.progress))
+
       tour.progress = 0
-      apply(0)
+      tour.flight = null
+      apply()
 
       const tl = gsap.timeline({
         defaults: { ease: 'none' },
-        onUpdate: () => apply(tour.progress),
+        onUpdate: apply,
         scrollTrigger: {
           trigger: trackRef.current,
           start: 'top top',
@@ -140,6 +175,112 @@ export function ScrollTour() {
         tl.to(tour, { progress: i + 1, duration: s.travel })
         tl.to({}, { duration: s.dwell }) // 감상 구간 — 카메라 정지
       })
+      const trigger = tl.scrollTrigger!
+
+      // ── 직접 이동 ─────────────────────────────
+      /** 정류장의 감상 구간 안 스크롤 위치 (px) */
+      const scrollYFor = (stop: number) => {
+        const range = stop === GALLERY_STOP ? null : stops[stop - 1]
+        const at = range ? range.start + (range.end - range.start) * ARRIVE_AT : 0
+        return Math.round(trigger.start + (trigger.end - trigger.start) * at)
+      }
+
+      /** 스크롤 위치에 맞춰 투어 위치를 즉시 맞춤 (스크럽 관성 없이) */
+      const syncToScroll = () => {
+        ScrollTrigger.update()
+        // 스크럽 관성 트윈이 있으면 끝까지 진행 (감소 설정처럼 스크럽이 즉시 반영이면 트윈이 없음)
+        const scrub = trigger.getTween() as unknown
+        if (scrub instanceof gsap.core.Tween) scrub.progress(1)
+      }
+
+      const focusStop = (stop: number) => {
+        const selector =
+          stop === GALLERY_STOP
+            ? '[data-tour="hero-title"] h1'
+            : `[data-tour="panel-${projects[stop - 1]?.id}"] h2`
+        document.querySelector<HTMLElement>(selector)?.focus({ preventScroll: true })
+      }
+
+      let flightTween: gsap.core.Tween | null = null
+      let flightId = 0
+
+      /** 비행을 끝내고 스크롤 투어로 넘김 — 투어 위치는 이미 도착 지점과 같습니다 */
+      const endFlight = () => {
+        flightTween?.kill()
+        flightTween = null
+        if (!tour.flight) return
+        tour.flight = null
+        apply()
+      }
+
+      const goTo = (stop: number, options: GoToOptions = {}) => {
+        const target = Math.min(Math.max(stop, 0), last)
+        const from = tour.flight ? tour.flight.to : tour.progress
+        flightTween?.kill()
+        flightStartAlpha = elements.map((el) => parseFloat(el?.style.opacity || '0'))
+
+        // 스크롤 위치를 먼저 도착 지점으로 — 이후 스크롤을 다시 시작해도 위치가 일치합니다.
+        window.scrollTo(0, scrollYFor(target))
+
+        if (reducedMotion) {
+          // 애니메이션 감소: 카메라 이동 없이 즉시 전환
+          tour.flight = null
+          syncToScroll()
+          apply()
+          if (options.focus) focusStop(target)
+          return
+        }
+
+        const flight: Flight = { id: ++flightId, to: target, t: 0 }
+        tour.flight = flight
+        apply()
+        flightTween = gsap.to(flight, {
+          t: 1,
+          duration: FLIGHT_BASE + FLIGHT_PER_STOP * Math.min(Math.abs(target - from), 2),
+          ease: 'none',
+          onUpdate: apply,
+          onComplete: () => {
+            syncToScroll()
+            endFlight()
+            if (options.focus) focusStop(target)
+          },
+        })
+      }
+      registerTourNavigator(goTo)
+
+      // 비행 중에 사용자가 스크롤을 시작하면 비행을 멈추고 스크롤로 넘김
+      // (스크롤 위치는 이미 도착 지점이므로 카메라는 그 자리에서 자연스럽게 이어집니다)
+      const interrupt = () => {
+        if (!tour.flight) return
+        syncToScroll()
+        endFlight()
+      }
+      const onKey = (e: KeyboardEvent) => {
+        const el = e.target as HTMLElement | null
+        // Esc: 작품 화면에서 전시관 전체로 (입력 중이거나 Works 메뉴 안에서는 메뉴가 먼저 처리)
+        if (e.key === 'Escape') {
+          if (!el?.closest('input, textarea, select, [data-tour-nav]') && tour.progress > 0.5) {
+            goTo(GALLERY_STOP, { focus: true })
+          }
+          return
+        }
+        // 버튼·링크 위의 Space/화살표는 그 요소의 동작이므로 스크롤로 보지 않음
+        if (SCROLL_KEYS.has(e.key) && !el?.closest('button, a, input, textarea, select, [data-tour-nav]')) {
+          interrupt()
+        }
+      }
+      window.addEventListener('wheel', interrupt, { passive: true })
+      window.addEventListener('touchmove', interrupt, { passive: true })
+      window.addEventListener('keydown', onKey)
+
+      return () => {
+        registerTourNavigator(null)
+        flightTween?.kill()
+        tour.flight = null
+        window.removeEventListener('wheel', interrupt)
+        window.removeEventListener('touchmove', interrupt)
+        window.removeEventListener('keydown', onKey)
+      }
     },
     { dependencies: [reducedMotion], revertOnUpdate: true },
   )

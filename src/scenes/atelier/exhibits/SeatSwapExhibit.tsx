@@ -54,7 +54,7 @@ export function SeatSwapExhibit({
   /** 0 = 원래 자리, 1 = 교환된 자리 (선형 진행값, 화면에는 이징을 적용) */
   const progress = useRef(0)
   // 마우스는 hover, 터치는 탭 (작품 공통 인터랙션)
-  const { active: swapped, handlers } = useExhibitInteraction()
+  const { active: swapped, handlers } = useExhibitInteraction('seat-swap')
 
   useFrame(({ clock }, delta) => {
     const a = ticketA.current
