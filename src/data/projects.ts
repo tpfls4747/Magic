@@ -25,6 +25,7 @@ export const projects: Project[] = [
     index: 1,
     title: 'Seat Swap',
     subtitle: '공연 좌석 교환 UX',
+    // 임시 소개 문구 — 실제 프로젝트 자료가 들어오면 교체합니다.
     summary:
       '예매한 공연 좌석을 다른 관객과 맞바꾸는 과정을 더 쉽고 안심할 수 있게 설계한 UX 프로젝트입니다.',
     tags: ['UX Design', 'Mobile'],
@@ -35,8 +36,10 @@ export const projects: Project[] = [
     index: 2,
     title: 'Sign-up Redesign',
     subtitle: '회원가입 UX 리디자인',
-    summary: '',
-    tags: [],
+    // 임시 소개 문구 — 실제 프로젝트 자료가 들어오면 교체합니다.
+    summary:
+      '복잡한 회원가입 과정을 분석하고, 사용자가 더 쉽게 이해하고 진행할 수 있도록 화면 구조와 입력 흐름을 개선한 UX 프로젝트입니다.',
+    tags: ['UX Redesign', 'Usability'],
     object: 'smartphone',
   },
   {

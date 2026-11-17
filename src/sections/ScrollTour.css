@@ -1,18 +1,14 @@
 /*
  * 스크롤 트랙 — 화면에 보이는 내용은 고정된 3D 캔버스와 오버레이이고,
- * 이 트랙은 스크롤 거리만 만듭니다. (전시관 1화면 + 작품까지 이동 1.3화면)
+ * 이 트랙은 스크롤 거리만 만듭니다.
+ * 전시관 1화면 + 작품마다 (이동 + 감상) 길이 (--stop-length, 화면 높이 단위)
  */
 .tour-track {
   position: relative;
   pointer-events: none;
 }
 
-.tour-stop--hall {
-  height: 100vh;
-  height: 100svh;
-}
-
-.tour-stop--exhibit {
-  height: 130vh;
-  height: 130svh;
+.tour-stop {
+  height: calc(var(--stop-length, 1) * 100vh);
+  height: calc(var(--stop-length, 1) * 100svh);
 }

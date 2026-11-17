@@ -32,11 +32,12 @@
 
 ### 스크롤 투어 — 작품 근접 화면
 
-아래로 스크롤하면 카메라가 Seat Swap 전시대로 이동하고 프로젝트 소개가 나타납니다.
+아래로 스크롤하면 카메라가 전시관 전체 → Seat Swap → Sign-up Redesign 순서로 이동하고, 각 작품 앞에서 프로젝트 소개가 나타납니다.
 
-| 데스크톱 | 모바일 |
-|---|---|
-| ![근접 화면 데스크톱](docs/screenshots/step3-1-exhibit-desktop.jpg) | ![근접 화면 모바일](docs/screenshots/step3-1-exhibit-mobile.jpg) |
+| | 데스크톱 | 모바일 |
+|---|---|---|
+| Exhibit 01 | ![Seat Swap 데스크톱](docs/screenshots/step3-1-exhibit-desktop.jpg) | ![Seat Swap 모바일](docs/screenshots/step3-1-exhibit-mobile.jpg) |
+| Exhibit 02 | ![Sign-up 데스크톱](docs/screenshots/step4-1-signup-desktop.jpg) | ![Sign-up 모바일](docs/screenshots/step4-1-signup-mobile.jpg) |
 
 ### 작품 1 — Seat Swap (근접 촬영)
 
@@ -105,8 +106,10 @@ src/
 
 ### 스크롤 투어 구조
 
-- `src/sections/ScrollTour.tsx` — 실제 스크롤 트랙 + GSAP ScrollTrigger. 스크롤 진행값을 `src/lib/tour.ts` 의 공유 객체에 기록하고, 메인 제목/프로젝트 패널의 표시를 제어합니다.
-- `CameraRig` 가 매 프레임 진행값을 읽어 전체 구도 ↔ 작품 근접 구도의 위치와 시선을 함께 보간합니다.
+- `src/sections/ScrollTour.tsx` — 실제 스크롤 트랙 + GSAP ScrollTrigger 타임라인. 작품마다 '이동 → 감상' 구간을 두고, 투어 위치(0 = 전체, 1 = 작품 1, 2 = 작품 2)를 `src/lib/tour.ts` 의 공유 객체에 기록합니다. 메인 제목과 작품별 패널의 전환도 같은 값으로 제어합니다.
+- 스냅은 감상 구간 바로 근처에서 멈췄을 때만 부드럽게 맞춰 주고, 그 외에는 멈춘 자리를 그대로 둡니다.
+- 투어 순서는 `TOUR_PROJECT_IDS`(tour.ts)와 `TOUR_EXHIBITS`(exhibits/layout.ts) — 작품별 근접 구도는 `framing`(화면 위치·비율)으로 정의합니다.
+- `CameraRig` 가 매 프레임 투어 위치를 읽어 정류장 구도 사이의 위치와 시선을 함께 보간합니다.
 - `src/sections/ExhibitPanel.tsx` — 프로젝트 소개 패널. `projects.ts` 의 `caseStudyUrl` 이 있으면 링크, 없으면 '준비 중' 비활성 버튼으로 표시됩니다.
 - 애니메이션 감소 설정에서는 이동 과정 없이 두 화면이 바로 전환됩니다.
 
@@ -119,6 +122,7 @@ src/
 - [x] STEP 3 — 작품 1: Seat Swap (공연 좌석 교환 UX)
 - [x] STEP 3-1 — 스크롤 카메라 투어 (Seat Swap 근접 화면)
 - [x] STEP 4 — 작품 2: Sign-up Redesign (3D 스마트폰, 데모 화면)
+- [x] STEP 4-1 — 스크롤 투어 확장 (전체 → Seat Swap → Sign-up Redesign)
 - [ ] 작품 3 (브라우저)
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

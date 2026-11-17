@@ -24,9 +24,6 @@ const TRANSITION_DURATION = 2.2
 /** 화면 논리 픽셀 → m */
 const PX = PHONE.screenWidth / SCREEN_PX.width
 
-/** 휴대폰이 카메라에서 살짝 비껴 선 각도 — 레이어가 떠오르는 깊이가 읽히도록 */
-const PHONE_TURN = -0.3
-const PHONE_TILT = -0.06
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 const smoothstep = (a: number, b: number, x: number) => {
@@ -67,9 +64,10 @@ function layerSpec(el: ScreenElement, i: number, count: number, zIndex: number):
       (SCREEN_PX.height / 2 - (el.y + el.h / 2)) * PX,
       0.0009 + zIndex * 0.00004,
     ],
-    depth: 0.07 + hash(i, 1) * 0.09,
-    drift: [(hash(i, 2) - 0.5) * 0.04, 0.006 + hash(i, 3) * 0.012],
-    tilt: [(hash(i, 4) - 0.5) * 0.22, (hash(i, 5) - 0.5) * 0.22],
+    // 스마트폰에서 너무 멀리 벗어나지 않도록: 3.5~7.5cm 위로, 옆으로는 1cm 이내
+    depth: 0.035 + hash(i, 1) * 0.04,
+    drift: [(hash(i, 2) - 0.5) * 0.018, 0.003 + hash(i, 3) * 0.006],
+    tilt: [(hash(i, 4) - 0.5) * 0.12, (hash(i, 5) - 0.5) * 0.12],
     order: count > 1 ? i / (count - 1) : 0,
     renderOrder: 3 + zIndex,
     card: el.card,
@@ -176,24 +174,25 @@ export function SignupExhibit({
     layout.before.forEach((l, i) => {
       const mesh = beforeMeshes.current[i]
       if (!mesh) return
-      const u = easeOutCubic(clamp01((p - l.order * 0.14) / 0.46))
+      const u = easeOutCubic(clamp01((p - l.order * 0.12) / 0.5))
       mesh.position.set(l.base[0] + l.drift[0] * u, l.base[1] + l.drift[1] * u, l.base[2] + l.depth * u)
       mesh.rotation.set(l.tilt[0] * u, l.tilt[1] * u, 0)
       // 충분히 떠오른 뒤에야 사라지도록 — 분리되는 모습이 보이게
-      const opacity = 1 - smoothstep(0.72, 1, u)
+      const opacity = 1 - smoothstep(0.62, 1, u)
       opacityOf(mesh).opacity = opacity
       mesh.visible = opacity > 0.002
       setShadow(beforeShadows.current[i], u, opacity)
     })
 
     // ── 배경 전환
-    if (bgAfterRef.current) opacityOf(bgAfterRef.current).opacity = smoothstep(0.34, 0.66, p)
+    if (bgAfterRef.current) opacityOf(bgAfterRef.current).opacity = smoothstep(0.18, 0.52, p)
 
     // ── 개선된 화면 요소: 떠 있는 위치에서 화면으로 내려앉으며 정렬
     layout.after.forEach((l, i) => {
       const mesh = afterMeshes.current[i]
       if (!mesh) return
-      const v = clamp01((p - 0.46 - l.order * 0.18) / 0.36)
+      // 기존 요소가 사라지기 전에 새 요소가 나타나기 시작 — 화면이 하얗게 비는 순간이 없도록
+      const v = clamp01((p - 0.24 - l.order * 0.1) / 0.5)
       const lift = 1 - easeInOutCubic(v)
       mesh.position.set(
         l.base[0] - l.drift[0] * 0.6 * lift,
@@ -201,7 +200,7 @@ export function SignupExhibit({
         l.base[2] + l.depth * lift,
       )
       mesh.rotation.set(-l.tilt[0] * 0.6 * lift, -l.tilt[1] * 0.6 * lift, 0)
-      const opacity = smoothstep(0, 0.45, v)
+      const opacity = smoothstep(0, 0.35, v)
       opacityOf(mesh).opacity = opacity
       mesh.visible = opacity > 0.002
       setShadow(afterShadows.current[i], lift, opacity)
@@ -218,14 +217,14 @@ export function SignupExhibit({
     }
     if (phone) {
       // 전환 도중에만 약 4° 정도 돌아섰다가 제자리로 — 과한 회전 없이
-      phone.rotation.y = PHONE_TURN + Math.sin(easeInOutCubic(p) * Math.PI) * 0.07
+      phone.rotation.y = SIGN_UP.turn + Math.sin(easeInOutCubic(p) * Math.PI) * 0.07
     }
   })
 
   return (
     <group position={SIGN_UP.center} rotation-y={SIGN_UP.yaw}>
       <group ref={floatRef}>
-        <group ref={phoneRef} rotation={[PHONE_TILT, PHONE_TURN, 0]}>
+        <group ref={phoneRef} rotation={[SIGN_UP.tilt, SIGN_UP.turn, 0]}>
           <Phone castShadow={castShadow}>
             <mesh geometry={bgGeo} renderOrder={1}>
               <meshBasicMaterial map={screens.before.background} toneMapped={false} />

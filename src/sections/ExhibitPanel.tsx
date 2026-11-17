@@ -1,5 +1,12 @@
-import type { Project } from '@/data/projects'
+import type { ExhibitObject, Project } from '@/data/projects'
 import './ExhibitPanel.css'
+
+/** 작품별 인터랙션 안내 문구 */
+const EXHIBIT_HINT: Record<ExhibitObject, { hover: string; touch: string }> = {
+  'golden-ticket': { hover: '티켓에 마우스를 올려 보세요', touch: '티켓을 탭해 보세요' },
+  smartphone: { hover: '스마트폰에 마우스를 올려 보세요', touch: '스마트폰을 탭해 보세요' },
+  browser: { hover: '작품에 마우스를 올려 보세요', touch: '작품을 탭해 보세요' },
+}
 
 /**
  * 작품 근접 화면의 프로젝트 소개 패널.
@@ -11,7 +18,11 @@ export function ExhibitPanel({ project }: { project: Project }) {
   const headingId = `exhibit-${project.id}-title`
 
   return (
-    <section className="exhibit-panel" data-tour="panel" aria-labelledby={headingId}>
+    <section
+      className="exhibit-panel"
+      data-tour={`panel-${project.id}`}
+      aria-labelledby={headingId}
+    >
       <div className="exhibit-panel__card">
         <p className="exhibit-panel__eyebrow">
           <span>Exhibit {number}</span>
@@ -25,10 +36,10 @@ export function ExhibitPanel({ project }: { project: Project }) {
         <p className="exhibit-panel__summary">{project.summary}</p>
 
         <div className="exhibit-panel__actions">
-          <CaseStudyButton url={project.caseStudyUrl} />
+          <CaseStudyButton id={project.id} url={project.caseStudyUrl} />
           <p className="exhibit-panel__hint">
-            <span className="only-hover">티켓에 마우스를 올려 보세요</span>
-            <span className="only-touch">티켓을 탭해 보세요</span>
+            <span className="only-hover">{EXHIBIT_HINT[project.object].hover}</span>
+            <span className="only-touch">{EXHIBIT_HINT[project.object].touch}</span>
           </p>
         </div>
       </div>
@@ -40,7 +51,8 @@ export function ExhibitPanel({ project }: { project: Project }) {
  * 케이스 스터디 버튼.
  * 상세 페이지 주소가 생기면 링크로 동작하고, 그 전에는 비활성 상태와 '준비 중' 표시를 보여줍니다.
  */
-function CaseStudyButton({ url }: { url?: string }) {
+function CaseStudyButton({ id, url }: { id: string; url?: string }) {
+  const noteId = `case-soon-${id}`
   if (url) {
     return (
       <a className="case-button" href={url}>
@@ -50,9 +62,9 @@ function CaseStudyButton({ url }: { url?: string }) {
     )
   }
   return (
-    <button type="button" className="case-button" disabled aria-describedby="case-soon">
+    <button type="button" className="case-button" disabled aria-describedby={noteId}>
       View Case Study
-      <span id="case-soon" className="case-button__badge">
+      <span id={noteId} className="case-button__badge">
         준비 중
       </span>
     </button>

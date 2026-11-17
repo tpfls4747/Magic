@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { tour } from '@/lib/tour'
-import { OVERVIEW_CAMERA, SEAT_SWAP } from './exhibits/layout'
+import { OVERVIEW_CAMERA, TOUR_EXHIBITS, type TourExhibit } from './exhibits/layout'
 
 /** 기본 시점: 사람 눈높이에서 홀 깊숙이 바라보는 1점 투시 구도 */
 const BASE_POSITION = OVERVIEW_CAMERA
@@ -28,37 +28,32 @@ interface Shot {
 
 /**
  * 작품 근접 구도 계산.
- * 화면 비율에 따라 작품이 놓일 화면 위치와 차지할 비율을 정하고,
+ * 화면 비율에 따라 작품이 놓일 화면 위치와 차지할 비율(작품별 framing)을 정하고,
  * 거기에 맞는 카메라 거리와 시선 오프셋을 구합니다.
  *
- * - 가로 화면: 작품은 화면 왼쪽(약 33%), 오른쪽은 프로젝트 설명 패널
- * - 세로 화면: 작품은 화면 위쪽(약 33%), 아래는 설명 패널
+ * - 가로 화면: 작품은 화면 왼쪽, 오른쪽은 프로젝트 설명 패널
+ * - 세로 화면: 작품은 화면 위쪽, 아래는 설명 패널
  */
-function exhibitShot(aspect: number, vfovDeg: number): Shot {
-  const portrait = aspect < 1
+function exhibitShot(exhibit: TourExhibit, aspect: number, vfovDeg: number): Shot {
   const vfov = toRad(vfovDeg)
   const viewH = 2 * Math.tan(vfov / 2) // 거리 1m 당 보이는 높이
   const viewW = viewH * aspect
+  const frame = aspect < 1 ? exhibit.framing.portrait : exhibit.framing.landscape
 
-  // 작품이 차지할 화면 비율(가로/세로)과 작품 중심의 화면 위치(0~1, 좌상단 기준)
-  const frame = portrait
-    ? { w: 0.8, h: 0.3, x: 0.5, y: 0.33 }
-    : { w: 0.36, h: 0.4, x: 0.33, y: 0.47 }
-
-  const { width, height } = SEAT_SWAP.extent
+  const { width, height } = exhibit.extent
   const distance = Math.max(width / (frame.w * viewW), height / (frame.h * viewH))
 
-  // 작품 정면 방향 (작품이 바라보는 쪽)
-  const facing = new THREE.Vector3(Math.sin(SEAT_SWAP.yaw), 0, Math.cos(SEAT_SWAP.yaw))
+  // 카메라가 작품을 바라보는 방향
+  const facing = new THREE.Vector3(Math.sin(exhibit.viewYaw), 0, Math.cos(exhibit.viewYaw))
   const right = new THREE.Vector3().crossVectors(facing.clone().negate(), UP).normalize()
 
   // 작품을 화면의 원하는 위치에 두기 위해 시선을 반대쪽으로 비킵니다.
-  const target = SEAT_SWAP.center
+  const target = exhibit.center
     .clone()
     .addScaledVector(right, (0.5 - frame.x) * viewW * distance)
     .addScaledVector(UP, -(0.5 - frame.y) * viewH * distance)
 
-  // 살짝 위에서 내려다보는 시선 (약 5°) — 티켓 윗면의 금박 모서리가 보이도록
+  // 살짝 위에서 내려다보는 시선 (약 5°)
   const elevation = toRad(5)
   const position = target
     .clone()
@@ -68,12 +63,21 @@ function exhibitShot(aspect: number, vfovDeg: number): Shot {
   return { position, target }
 }
 
+/**
+ * 구간별 이동 곡선 — 직선 보간 위에 더하는 완만한 우회.
+ * 전체 → 작품: 살짝 떠오름 / 작품 → 작품: 뒤로 물러나 홀을 가로지르며 가운데 전시대도 스쳐 보이게
+ */
+const SEGMENT_ARC = [
+  { lift: 0.22, back: 0 },
+  { lift: 0.18, back: 1.4 },
+]
+
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2
 
 /**
  * 카메라 리그
  * 1) 화면 비율에 맞춰 화각과 기본 구도를 조정하고
- * 2) 스크롤 진행값(tour.progress)에 따라 전체 구도 → 작품 근접 구도로 이동하며
+ * 2) 스크롤 투어 위치(tour.progress)에 따라 전체 구도 → 작품 1 → 작품 2 구도 사이를 이동하며
  * 3) 그 위에 마우스 패럴랙스를 아주 작게 더합니다.
  * 세 요소를 한 곳에서 합성하므로 서로 충돌하지 않습니다.
  */
@@ -103,7 +107,9 @@ export function CameraRig({
       position: BASE_POSITION.clone().add(new THREE.Vector3(0, 0, pullBack)),
       target: LOOK_AT.clone(),
     }
-    return { fov, overview, exhibit: exhibitShot(aspect, fov) }
+    // 정류장 구도: 0 = 전체, 1.. = 작품 순서
+    const stops = [overview, ...TOUR_EXHIBITS.map((ex) => exhibitShot(ex, aspect, fov))]
+    return { fov, stops }
   }, [size.width, size.height])
 
   useEffect(() => {
@@ -148,19 +154,30 @@ export function CameraRig({
     const cam = cameraRef.current
     if (!cam) return
     const dt = Math.min(delta, 0.1)
-    const { overview, exhibit } = shots
+    const { stops } = shots
+    const last = stops.length - 1
 
-    // 스크롤 진행값 → 이징. 애니메이션 감소 설정에서는 이동 과정 없이 두 구도 사이를 전환합니다.
-    const p = THREE.MathUtils.clamp(tour.progress, 0, 1)
-    const e = reducedMotion ? (p < 0.5 ? 0 : 1) : easeInOutSine(p)
+    // 투어 위치(0 = 전체, 1 = 작품 1, 2 = 작품 2 …) → 현재 구간과 구간 안의 진행값
+    // 애니메이션 감소 설정에서는 이동 과정 없이 가장 가까운 정류장으로 바로 전환합니다.
+    const pos = THREE.MathUtils.clamp(tour.progress, 0, last)
+    const segment = Math.min(Math.floor(pos), last - 1)
+    const local = pos - segment
+    const e = reducedMotion ? (local < 0.5 ? 0 : 1) : easeInOutSine(local)
+    const from = stops[segment]
+    const to = stops[segment + 1]
+    const arc = Math.sin(e * Math.PI) * (reducedMotion ? 0 : 1)
+    const bend = SEGMENT_ARC[Math.min(segment, SEGMENT_ARC.length - 1)]
 
-    // 위치와 시선을 함께 보간 — 이동 중간에 살짝 떠오르는 완만한 곡선
-    desiredPos.current.lerpVectors(overview.position, exhibit.position, e)
-    desiredPos.current.y += Math.sin(e * Math.PI) * 0.22
-    desiredLook.current.lerpVectors(overview.target, exhibit.target, e)
+    // 위치와 시선을 함께 보간 + 구간별 완만한 우회 곡선
+    desiredPos.current.lerpVectors(from.position, to.position, e)
+    desiredPos.current.y += arc * bend.lift
+    desiredPos.current.z += arc * bend.back
+    desiredLook.current.lerpVectors(from.target, to.target, e)
 
+    // 전체 구도에서 멀어질수록(작품 가까이) 패럴랙스를 약하게
+    const nearExhibit = Math.min(pos, 1)
     // 마우스 패럴랙스: 현재 시선 기준의 좌우/상하로, 작품에 가까울수록 약하게
-    const amount = THREE.MathUtils.lerp(1, PARALLAX_AT_EXHIBIT, e)
+    const amount = THREE.MathUtils.lerp(1, PARALLAX_AT_EXHIBIT, easeInOutSine(nearExhibit))
     const { x, y } = pointer.current
     forward.current.subVectors(desiredLook.current, desiredPos.current).normalize()
     right.current.crossVectors(forward.current, UP).normalize()
