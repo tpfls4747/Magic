@@ -114,3 +114,19 @@ export const skylightMaterial = new THREE.MeshBasicMaterial({
   color: new THREE.Color('#f6eefa'),
   toneMapped: true,
 })
+
+/**
+ * 전면 유리 — 바탕색은 더하지 않고(가산 혼합 + 검정) 환경 반사와 하이라이트만 얹습니다.
+ * 화면 콘텐츠를 가리지 않으면서 유리 표면처럼 보이게 합니다.
+ */
+export const screenGlassMaterial = new THREE.MeshPhysicalMaterial({
+  color: '#000000',
+  roughness: 0.05,
+  metalness: 0,
+  clearcoat: 1,
+  clearcoatRoughness: 0.03,
+  envMapIntensity: 2.2,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+})

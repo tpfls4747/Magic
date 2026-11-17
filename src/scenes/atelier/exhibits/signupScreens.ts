@@ -1,4 +1,8 @@
-import * as THREE from 'three'
+import type * as THREE from 'three'
+import { canvasTexture as texture, type Draw } from './uiCanvas'
+
+// 기존 import 경로 유지
+export { createCardShadowTexture } from './uiCanvas'
 
 /**
  * Sign-up Redesign — 스마트폰 화면 UI (임시 데모)
@@ -29,22 +33,8 @@ export interface ScreenState {
   elements: ScreenElement[]
 }
 
-type Draw = (ctx: CanvasRenderingContext2D, w: number, h: number) => void
 
 const SANS = 'system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif'
-
-function texture(w: number, h: number, scale: number, draw: Draw) {
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(w * scale)
-  canvas.height = Math.round(h * scale)
-  const ctx = canvas.getContext('2d')!
-  ctx.scale(scale, scale)
-  draw(ctx, w, h)
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 4
-  return tex
-}
 
 function element(
   x: number,
@@ -55,18 +45,6 @@ function element(
   card = false,
 ): ScreenElement {
   return { x, y, w, h, card, texture: texture(w, h, 3, draw) }
-}
-
-/** 떠오른 카드 아래에 드리우는 부드러운 그림자 (모든 카드가 공유, 크기에 맞게 늘려 씀) */
-export function createCardShadowTexture() {
-  return texture(64, 64, 2, (ctx) => {
-    const g = ctx.createRadialGradient(32, 32, 4, 32, 32, 32)
-    g.addColorStop(0, 'rgba(40, 30, 60, 0.9)')
-    g.addColorStop(0.55, 'rgba(40, 30, 60, 0.45)')
-    g.addColorStop(1, 'rgba(40, 30, 60, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, 64, 64)
-  })
 }
 
 function text(

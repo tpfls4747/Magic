@@ -24,6 +24,12 @@
 |---|---|
 | ![데스크톱](docs/screenshots/step2-desktop.jpg) | ![모바일](docs/screenshots/step2-mobile.jpg) |
 
+### 작품 3 — Web Prototype (근접 촬영, 데모 화면)
+
+기본 → hover(레이어가 살짝 떠오름) → 클릭(브라우저가 돌아서며 UI 레이어가 공간으로 펼쳐짐). 다시 클릭하면 조립됩니다.
+
+![Web Prototype](docs/screenshots/step7-web-prototype.jpg)
+
 ### 작품 바로가기 — Works 내비게이션 · 3D 오브젝트 클릭
 
 | 데스크톱 (상단 Works 메뉴, 3D 작품 hover 안내) | 모바일 (바로가기 · Works 메뉴 · Back to Gallery) |
@@ -106,7 +112,11 @@ src/
 | `exhibits/SignupExhibit.tsx` | 작품 2: 떠 있는 스마트폰, hover/탭 시 UI 레이어 분리 → 개선 화면 정렬 |
 | `exhibits/Phone.tsx`, `phoneGeometry.ts` | 금속 프레임·후면 유리·베젤·전면 유리·카메라 모듈을 가진 3D 스마트폰 |
 | `exhibits/signupScreens.ts` | 기존/개선 회원가입 데모 화면 (요소별 캔버스 텍스처) |
-| `exhibits/useExhibitInteraction.ts` | 작품 공통 인터랙션 (마우스 hover / 터치 탭) |
+| `exhibits/WebPrototypeExhibit.tsx` | 작품 3: 떠 있는 브라우저, hover 시 레이어 깊이감, 클릭/탭으로 레이어 펼치기·조립 |
+| `exhibits/Browser.tsx`, `browserGeometry.ts` | 금속 측면·툴바·주소창·화면 테두리·유리를 가진 3D 브라우저 (화면 콘텐츠는 children) |
+| `exhibits/webPrototypeScreen.ts` | 데모 웹페이지 레이어와 레이어별 펼침 깊이·방향 — 실제 작업물로 바꿀 때 이 파일만 교체 |
+| `exhibits/shapes.ts`, `uiCanvas.ts` | 공용 둥근 사각 형상 / 캔버스 텍스처·카드 그림자 헬퍼 |
+| `exhibits/useExhibitInteraction.ts` | 작품 공통 인터랙션 (hover / 탭 / 클릭 토글 / 작품 앞이 아닐 때 이동) |
 
 외부 3D 모델·HDRI 없이 모두 코드로 생성합니다.
 
@@ -143,6 +153,7 @@ src/
 - [x] STEP 4 — 작품 2: Sign-up Redesign (3D 스마트폰, 데모 화면)
 - [x] STEP 4-1 — 스크롤 투어 확장 (전체 → Seat Swap → Sign-up Redesign)
 - [x] 자유 탐색 — 3D 작품 클릭, Works 메뉴, Back to Gallery, 키보드
-- [ ] 작품 3 (브라우저)
+- [x] STEP 7 — 작품 3: Web Prototype (3D 브라우저, UI 레이어 확장 · 데모 화면, 스크롤 투어 연결 전)
+- [ ] Web Prototype 스크롤 투어·Works 메뉴 연결
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

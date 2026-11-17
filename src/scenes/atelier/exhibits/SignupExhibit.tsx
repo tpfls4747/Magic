@@ -131,7 +131,7 @@ export function SignupExhibit({
   const floatRef = useRef<THREE.Group>(null)
   const phoneRef = useRef<THREE.Group>(null)
   const progress = useRef(0)
-  const { active, handlers } = useExhibitInteraction('signup-redesign', 4200)
+  const { active, handlers } = useExhibitInteraction('signup-redesign', { returnDelay: 4200 })
 
   const screens = useMemo(() => createSignupScreens(), [])
 

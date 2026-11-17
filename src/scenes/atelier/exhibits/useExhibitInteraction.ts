@@ -4,12 +4,26 @@ import {
   goToStop,
   setHoveredProject,
   stopOfProject,
+  TOUR_PROJECT_IDS,
   useActiveStop,
   type TourProjectId,
 } from '@/lib/tour'
 
 /** 모바일 탭 후 원래 상태로 돌아오기까지 (ms) */
 const TOUCH_RETURN_DELAY = 3200
+
+const isTourProject = (id: string): id is TourProjectId =>
+  (TOUR_PROJECT_IDS as readonly string[]).includes(id)
+
+export interface ExhibitInteractionOptions {
+  /** 터치로 켠 상태가 저절로 돌아오기까지 (toggle 이 아닐 때) */
+  returnDelay?: number
+  /**
+   * true: 클릭/탭할 때마다 켜고 끄는 작품 (예: 레이어 펼치기 — 다시 누르면 닫힘)
+   * false: hover 하는 동안 / 탭 후 잠시 동안만 켜지는 작품 (티켓 교환, UI 전환)
+   */
+  toggle?: boolean
+}
 
 /**
  * 전시 작품 공통 인터랙션 — 작품 앞에 와 있는지(focused)에 따라 역할이 나뉩니다.
@@ -18,17 +32,23 @@ const TOUCH_RETURN_DELAY = 3200
  *   - 마우스 hover: 커서와 작품 이름 안내만 표시 (작품 애니메이션은 시작하지 않음)
  *   - 클릭 / 탭: 그 작품의 근접 화면으로 이동
  * 작품 앞일 때
- *   - 마우스: hover 하는 동안 active (티켓 교환, UI 전환 등)
- *   - 터치: 탭하면 active, 일정 시간 뒤(또는 다시 탭하면) 원래대로
+ *   - 마우스 hover: hovered
+ *   - toggle 작품: 클릭 / 탭 → toggled 켜기·끄기
+ *   - 그 외 작품: hover 또는 탭(일정 시간 뒤 자동 복귀) → active
  *
+ * 스크롤 투어에 아직 들어가지 않은 작품은 이동할 정류장이 없으므로 항상 '작품 앞'으로 봅니다.
  * 탭은 pointerup 에서 처리합니다. 화면을 끌어 스크롤하면 브라우저가 pointercancel 을 보내므로
  * 스크롤하려다 작품이 반응하는 일이 없습니다.
  * 반환한 handlers 를 감지 영역 메시에 펼쳐 넣으면 됩니다.
  */
-export function useExhibitInteraction(projectId: TourProjectId, returnDelay = TOUCH_RETURN_DELAY) {
-  const stop = stopOfProject(projectId)
+export function useExhibitInteraction(
+  projectId: string,
+  { returnDelay = TOUCH_RETURN_DELAY, toggle = false }: ExhibitInteractionOptions = {},
+) {
+  const inTour = isTourProject(projectId)
+  const stop = inTour ? stopOfProject(projectId) : null
   const activeStop = useActiveStop()
-  const focused = activeStop === stop
+  const focused = !inTour || activeStop === stop
   /**
    * 마우스가 작품 위에 있을 때, 그 순간 머물던 정류장 (없으면 null).
    * 전체 화면에서 클릭해 이동한 뒤 마우스를 움직이지 않았다면 작품 앞에서 hover 로 치지 않아,
@@ -36,7 +56,9 @@ export function useExhibitInteraction(projectId: TourProjectId, returnDelay = TO
    */
   const [hoverAt, setHoverAt] = useState<number | null>(null)
   const hovering = hoverAt !== null
-  const [tapped, setTapped] = useState(false)
+  const hovered = focused && hovering && (!inTour || hoverAt === stop)
+  /** 탭으로 켠 상태(일시) 또는 toggle 작품의 켜짐 상태 */
+  const [on, setOn] = useState(false)
   const touchTimer = useRef<number | undefined>(undefined)
   const lastPointer = useRef<string>('mouse')
 
@@ -49,11 +71,16 @@ export function useExhibitInteraction(projectId: TourProjectId, returnDelay = TO
     [],
   )
 
-  // 작품 앞을 벗어나면 이름 안내는 숨기고, 다시 hover 하는 중에 작품 앞에 도착하면 안내를 지웁니다.
+  // 작품 이름 안내: 투어 작품을 작품 앞이 아닌 곳에서 hover 할 때만
   useEffect(() => {
+    if (!inTour) return
     if (focused) setHoveredProject(null)
     else if (hovering) setHoveredProject(projectId)
-  }, [focused, hovering, projectId])
+  }, [inTour, focused, hovering, projectId])
+
+  const navigate = () => {
+    if (stop !== null) goToStop(stop)
+  }
 
   const handlers = {
     onPointerDown: (e: ThreeEvent<PointerEvent>) => {
@@ -73,27 +100,44 @@ export function useExhibitInteraction(projectId: TourProjectId, returnDelay = TO
       if (e.pointerType === 'touch') return
       document.body.style.cursor = ''
       setHoverAt(null)
-      setHoveredProject(null)
+      if (inTour) setHoveredProject(null)
     },
-    // 마우스 클릭: 작품 앞이 아닐 때만 이동 (작품 앞에서는 hover 가 이미 동작 중)
+    // 마우스 클릭: 작품 앞이 아니면 이동, 작품 앞이면 toggle 작품만 켜고 끔 (hover 작품은 이미 동작 중)
     onClick: (e: ThreeEvent<MouseEvent>) => {
-      if (lastPointer.current === 'touch' || focused) return
-      e.stopPropagation()
-      goToStop(stop)
+      if (lastPointer.current === 'touch') return
+      if (!focused) {
+        e.stopPropagation()
+        navigate()
+      } else if (toggle) {
+        e.stopPropagation()
+        setOn((v) => !v)
+      }
     },
     onPointerUp: (e: ThreeEvent<PointerEvent>) => {
       if (e.pointerType !== 'touch') return
       e.stopPropagation()
       if (!focused) {
-        goToStop(stop)
+        navigate()
+        return
+      }
+      if (toggle) {
+        setOn((v) => !v)
         return
       }
       window.clearTimeout(touchTimer.current)
-      const next = !tapped
-      setTapped(next)
-      if (next) touchTimer.current = window.setTimeout(() => setTapped(false), returnDelay)
+      const next = !on
+      setOn(next)
+      if (next) touchTimer.current = window.setTimeout(() => setOn(false), returnDelay)
     },
   }
 
-  return { active: focused && (hoverAt === stop || tapped), handlers }
+  return {
+    /** hover 또는 탭 중 (toggle 이 아닌 작품의 동작 기준) */
+    active: focused && (hovered || (!toggle && on)),
+    /** 작품 앞에서 마우스가 올라와 있음 */
+    hovered,
+    /** toggle 작품이 켜져 있음 */
+    toggled: focused && toggle && on,
+    handlers,
+  }
 }

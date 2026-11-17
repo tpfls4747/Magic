@@ -1,6 +1,6 @@
 import { forwardRef, useMemo, type ReactNode } from 'react'
 import * as THREE from 'three'
-import { goldTrimMaterial } from '../materials'
+import { goldTrimMaterial, screenGlassMaterial } from '../materials'
 import { PHONE, PHONE_FACE_Z, roundedRectGeometry, roundedRectShape } from './phoneGeometry'
 
 let shared: ReturnType<typeof build> | null = null
@@ -59,22 +59,6 @@ const bezelMaterial = new THREE.MeshStandardMaterial({
   metalness: 0,
 })
 
-/**
- * 전면 유리 — 바탕색은 더하지 않고(가산 혼합 + 검정) 환경 반사와 하이라이트만 얹습니다.
- * 화면 콘텐츠를 가리지 않으면서 유리 표면처럼 보이게 합니다.
- */
-const frontGlassMaterial = new THREE.MeshPhysicalMaterial({
-  color: '#000000',
-  roughness: 0.05,
-  metalness: 0,
-  clearcoat: 1,
-  clearcoatRoughness: 0.03,
-  envMapIntensity: 2.2,
-  transparent: true,
-  depthWrite: false,
-  blending: THREE.AdditiveBlending,
-})
-
 const lensMaterial = new THREE.MeshPhysicalMaterial({
   color: '#1a1620',
   roughness: 0.1,
@@ -129,7 +113,7 @@ export const Phone = forwardRef<THREE.Group, PhoneProps>(function Phone(
       {/* 층 간격은 비스듬한 각도에서도 깊이 충돌이 없도록 1mm 이상 */}
       <mesh geometry={g.bezel} material={bezelMaterial} position-z={faceZ + 0.0004} />
       <group position-z={faceZ + 0.0014}>{children}</group>
-      <mesh geometry={g.glass} material={frontGlassMaterial} position-z={faceZ + 0.0032} renderOrder={10} />
+      <mesh geometry={g.glass} material={screenGlassMaterial} position-z={faceZ + 0.0032} renderOrder={10} />
 
       {/* 후면 카메라 모듈 */}
       <group position={[-W / 2 + 0.1, H / 2 - 0.1, -faceZ]} rotation-y={Math.PI}>

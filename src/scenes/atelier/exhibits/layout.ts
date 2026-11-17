@@ -78,6 +78,26 @@ export const SIGN_UP = {
   },
 } as const
 
+const [wx, , wz] = PEDESTALS[1].position
+const webYaw = yawToward(wx, wz, OVERVIEW_CAMERA)
+
+/**
+ * 작품 3 — Web Prototype (뒤쪽 중앙 전시대의 3D 브라우저)
+ * 아직 스크롤 투어에는 연결하지 않았지만, 연결할 때 바로 쓸 수 있도록 TourExhibit 형태로 둡니다.
+ */
+export const WEB_PROTOTYPE = {
+  /** 브라우저 중심 — 아래쪽이 상판 위로 약 0.18m 떠 있도록 (높이 0.86m) */
+  center: new THREE.Vector3(wx, PEDESTAL_TOP + 0.61, wz),
+  yaw: webYaw,
+  viewYaw: webYaw,
+  /** 레이어가 펼쳐졌을 때까지 포함한 범위 */
+  extent: { width: 1.5, height: 1.0 },
+  framing: {
+    landscape: { w: 0.42, h: 0.5, x: 0.34, y: 0.48 },
+    portrait: { w: 0.86, h: 0.32, x: 0.5, y: 0.3 },
+  },
+} as const
+
 /**
  * 투어에 포함되는 작품의 배치 — 프로젝트 id 로 찾습니다.
  * 순서는 tour.ts 의 TOUR_PROJECT_IDS 가 정하고, 새 작품은 여기와 그 목록에 한 줄씩 추가합니다.
