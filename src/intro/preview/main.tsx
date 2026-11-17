@@ -14,6 +14,7 @@ import '@fontsource/cormorant-garamond/400-italic.css'
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { gsap } from 'gsap'
+import { introClock } from '../animState'
 import { GoldenLockIntro, INTRO_EVENTS, type IntroPhase } from '../index'
 import './preview.css'
 
@@ -24,9 +25,10 @@ const slow = Number(params.get('slow'))
 if (slow > 0) {
   gsap.globalTimeline.timeScale(slow)
   gsap.ticker.lagSmoothing(0)
+  introClock.scale = slow
 }
 // 디버그 시 콘솔/자동화 도구에서 타임라인을 직접 제어할 수 있도록 노출
-if (debug) Object.assign(window, { __gsap: gsap })
+if (debug) Object.assign(window, { __gsap: gsap, __introClock: introClock })
 
 // window CustomEvent 연결 예시 (props 콜백 대신 사용할 수 있음)
 for (const name of Object.values(INTRO_EVENTS)) {
@@ -40,12 +42,19 @@ function Preview() {
   const [revealSignal, setRevealSignal] = useState(false)
   const [phase, setPhase] = useState<IntroPhase>('idle')
   const [log, setLog] = useState<string[]>([])
-  const push = (s: string) => setLog((l) => [...l, `${(performance.now() / 1000).toFixed(2)}s  ${s}`])
+  const push = (s: string) => {
+    setLog((l) => [...l, `${(performance.now() / 1000).toFixed(2)}s  ${s}`])
+    // 자동 검수용: 이벤트별 호출 횟수
+    const w = window as unknown as { __introEvents?: Record<string, number> }
+    const key = s.split(' ')[0]
+    w.__introEvents = { ...w.__introEvents, [key]: (w.__introEvents?.[key] ?? 0) + 1 }
+  }
 
   const replay = () => {
     setShowExhibition(false)
     setRevealSignal(false)
     setLog([])
+    ;(window as unknown as { __introEvents?: Record<string, number> }).__introEvents = {}
     setShowIntro(true)
     setRun((r) => r + 1)
   }

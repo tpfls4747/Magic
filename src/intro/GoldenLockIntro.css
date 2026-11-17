@@ -40,7 +40,7 @@
 .gl-intro__ui {
   position: absolute;
   left: 50%;
-  bottom: clamp(28px, 7vh, 72px);
+  bottom: max(clamp(24px, 6vh, 64px), env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: min(560px, calc(100% - 32px));
   text-align: center;
@@ -50,6 +50,15 @@
 }
 .gl-intro.is-ready .gl-intro__ui {
   opacity: 1;
+}
+/* 제목 뒤의 아주 옅은 크림 안개 — 마법진 선과 글자가 겹쳐도 또렷하게 */
+.gl-intro__ui::before {
+  content: '';
+  position: absolute;
+  inset: -28px -40px -20px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(250, 245, 236, 0.82), rgba(250, 245, 236, 0));
 }
 
 .gl-intro__eyebrow {
@@ -70,6 +79,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.75)) drop-shadow(0 6px 16px rgba(143, 124, 196, 0.22));
 }
 .gl-intro__subtitle {
   margin: 10px 0 18px;
@@ -150,8 +160,51 @@
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 50%, #ffffff 0%, #fff8ea 28%, #f3e6ff 62%, #e2d4f6 100%);
+  /* 따뜻한 아이보리 중심 → 샴페인 골드 띠 → 은은한 라벤더 가장자리 (3D 폭발의 마지막 색과 같은 계열) */
+  background: radial-gradient(
+    circle at 50% 50%,
+    #fffdf8 0%,
+    #fff5df 20%,
+    #f7e5bd 38%,
+    #f1e2ee 62%,
+    #dccdf2 100%
+  );
+  transform-origin: 50% 50%;
+}
+.gl-intro__flash-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70vmax;
+  height: 70vmax;
+  margin: -35vmax 0 0 -35vmax;
+  border-radius: 50%;
+  border: 2px solid rgba(214, 178, 112, 0.55);
+  box-shadow:
+    0 0 40px rgba(240, 210, 150, 0.45),
+    inset 0 0 40px rgba(205, 185, 240, 0.35);
+  animation: gl-ring 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+.gl-intro__flash-sparkles {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+.gl-intro__flash-sparkles i {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background: radial-gradient(circle, #fff 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(0deg, transparent 44%, #fff6e0 50%, transparent 56%),
+    linear-gradient(90deg, transparent 44%, #fff6e0 50%, transparent 56%);
+  transform: rotate(calc(var(--i) * 25.7deg)) translateX(8vmin);
+  opacity: 0;
+  animation: gl-sparkle 2.4s ease-out infinite;
+  animation-delay: calc(var(--i) * -0.17s);
+}
+.gl-intro__flash-sparkles i:nth-child(3n) {
+  filter: hue-rotate(40deg) saturate(1.4);
 }
 .gl-intro__flash-core {
   position: absolute;
@@ -201,6 +254,29 @@
     opacity: 1;
   }
 }
+@keyframes gl-ring {
+  from {
+    transform: scale(0.2);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes gl-sparkle {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 25.7deg)) translateX(6vmin) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 25.7deg)) translateX(42vmin) scale(1);
+  }
+}
 @keyframes gl-spin {
   to {
     transform: translate(-50%, -50%) rotate(360deg);
@@ -210,7 +286,13 @@
 @media (prefers-reduced-motion: reduce) {
   .gl-intro__cta-star,
   .gl-intro__flash-core,
-  .gl-intro__flash-rays {
+  .gl-intro__flash-rays,
+  .gl-intro__flash-ring,
+  .gl-intro__flash-sparkles i {
     animation: none;
+  }
+  .gl-intro__flash-ring,
+  .gl-intro__flash-sparkles {
+    display: none;
   }
 }

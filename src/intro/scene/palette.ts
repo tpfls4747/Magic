@@ -9,5 +9,5 @@ export const INTRO_PALETTE = {
   roseGold: '#e9b8a4',
   ink: '#3a3140',
   keyholeDark: '#1d1424',
-  glow: '#fff3d6',
+  glow: '#ffe7b8',
 } as const

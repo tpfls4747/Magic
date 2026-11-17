@@ -2,8 +2,8 @@ import { useCursor } from '@react-three/drei'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import type { IntroAnim } from '../animState'
-import { heartCurve, keyBitShape } from './geometry'
+import { introClock, type IntroAnim } from '../animState'
+import { gemGeometry, heartCurve, keyBitShape } from './geometry'
 import { KEYHOLE } from './layout'
 import type { IntroMaterials } from './materials'
 
@@ -16,7 +16,7 @@ interface GoldenKeyProps {
   onActivate: () => void
 }
 
-const KEY_SCALE = 0.82
+const KEY_SCALE = 0.86
 const BOW_Y = 1.62
 
 // 회전 상태 (모델은 XY 평면, 끝(tip)이 원점, 샤프트가 +Y)
@@ -31,7 +31,8 @@ const Q_AIM = new THREE.Quaternion()
 const Q_TURN = new THREE.Quaternion().setFromAxisAngle(_z, -Math.PI / 2).multiply(Q_AIM)
 
 const AIM_POS = KEYHOLE.clone().add(new THREE.Vector3(0, 0, 0.95))
-const INSERT_POS = KEYHOLE.clone().add(new THREE.Vector3(0, 0, -0.32))
+/** 삽입 깊이: 칼라가 장식판 바로 앞에 닿고, 끝은 몸체 뒷면을 넘지 않는 위치 */
+const INSERT_POS = KEYHOLE.clone().add(new THREE.Vector3(0, 0, -0.68))
 
 const _q = new THREE.Quaternion()
 const _qIdle = new THREE.Quaternion()
@@ -54,18 +55,18 @@ export function GoldenKey({ anim, materials, animate, interactive, portrait, onA
   }, [materials])
 
   const geo = useMemo(() => {
-    const shaft = new THREE.CylinderGeometry(0.048, 0.048, 1.0, 32)
+    const shaft = new THREE.CylinderGeometry(0.052, 0.052, 1.0, 32)
     shaft.translate(0, 0.5, 0)
-    const tip = new THREE.SphereGeometry(0.048, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2)
+    const tip = new THREE.SphereGeometry(0.052, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2)
     const bit = new THREE.ExtrudeGeometry(keyBitShape(), {
-      depth: 0.05,
+      depth: 0.062,
       bevelEnabled: true,
-      bevelThickness: 0.008,
-      bevelSize: 0.008,
-      bevelSegments: 3,
+      bevelThickness: 0.012,
+      bevelSize: 0.01,
+      bevelSegments: 4,
     })
-    bit.translate(0, 0, -0.025)
-    const band = new THREE.TorusGeometry(0.056, 0.013, 10, 40)
+    bit.translate(0, 0, -0.031)
+    const band = new THREE.TorusGeometry(0.06, 0.015, 12, 40)
     band.rotateX(Math.PI / 2)
     const collar = new THREE.LatheGeometry(
       [
@@ -83,14 +84,13 @@ export function GoldenKey({ anim, materials, animate, interactive, portrait, onA
     )
     const neck = new THREE.CylinderGeometry(0.04, 0.046, 0.16, 24)
     neck.translate(0, 1.26, 0)
-    const heart = new THREE.TubeGeometry(heartCurve(0.3, 0), 160, 0.036, 14, true)
+    const heart = new THREE.TubeGeometry(heartCurve(0.3, 0), 180, 0.046, 18, true)
     heart.translate(0, BOW_Y + 0.02, 0)
-    const ring = new THREE.TorusGeometry(0.44, 0.03, 16, 96)
+    const ring = new THREE.TorusGeometry(0.44, 0.042, 20, 120)
     ring.translate(0, BOW_Y, 0)
-    const ringInner = new THREE.TorusGeometry(0.4, 0.011, 8, 96)
+    const ringInner = new THREE.TorusGeometry(0.392, 0.013, 10, 120)
     ringInner.translate(0, BOW_Y, 0)
-    const gem = new THREE.OctahedronGeometry(0.1, 0)
-    gem.scale(1, 1.2, 0.6)
+    const gem = gemGeometry(0.11, 1.2)
     const pearl = new THREE.SphereGeometry(0.038, 20, 12)
     const finial = new THREE.SphereGeometry(0.055, 24, 12)
     const finialStar = new THREE.OctahedronGeometry(0.06, 0)
@@ -116,10 +116,10 @@ export function GoldenKey({ anim, materials, animate, interactive, portrait, onA
     [geo, mats],
   )
 
-  useFrame((state) => {
+  useFrame(() => {
     const g = rig.current
     if (!g) return
-    const t = state.clock.elapsedTime
+    const t = introClock.time
 
     // 대기 위치 — 가로 화면에서는 자물쇠 오른쪽
     const bob = animate ? Math.sin(t * 1.3) * 0.07 : 0
@@ -139,7 +139,8 @@ export function GoldenKey({ anim, materials, animate, interactive, portrait, onA
     _p.y += Math.sin(f * Math.PI) * 0.45
     _p.z += Math.sin(f * Math.PI) * 0.6
     _q.slerpQuaternions(_qIdle, Q_AIM, f)
-    // 조준 → 삽입
+    // 조준 직후 살짝 뒤로 물러서며 숨을 고름 → 단번에 삽입
+    _p.z += anim.keyAnticipate * 0.16
     _p.lerp(INSERT_POS, anim.keyInsert)
     // 회전
     if (anim.keyTurn > 0) _q.slerp(Q_TURN, anim.keyTurn)

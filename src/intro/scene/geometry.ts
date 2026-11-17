@@ -90,3 +90,23 @@ export function keyBitShape(): THREE.Shape {
   s.lineTo(0, 0.04)
   return s
 }
+
+/**
+ * 브릴리언트 컷 느낌의 보석 — 테이블(윗면)·크라운·거들·파빌리온을 8분할 선반 회전체로.
+ * 테이블 면이 +Z(카메라 쪽)를 향합니다. flatShading 머티리얼과 함께 쓰면 면마다 반사가 갈립니다.
+ */
+export function gemGeometry(r: number, stretchY = 1, facets = 8): THREE.BufferGeometry {
+  // 아래(뾰족한 큘릿)에서 위(테이블)로 — LatheGeometry 의 면 방향이 바깥을 향하도록
+  const pts = [
+    new THREE.Vector2(0.0001, -r * 1.0),
+    new THREE.Vector2(r, -0.04 * r),
+    new THREE.Vector2(r, 0.02 * r),
+    new THREE.Vector2(r * 0.94, r * 0.16),
+    new THREE.Vector2(r * 0.56, r * 0.46),
+    new THREE.Vector2(0.0001, r * 0.46),
+  ]
+  const g = new THREE.LatheGeometry(pts, facets, Math.PI / facets)
+  g.rotateX(Math.PI / 2)
+  g.scale(1, stretchY, 1)
+  return g
+}

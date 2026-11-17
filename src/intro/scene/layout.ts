@@ -3,10 +3,10 @@ import * as THREE from 'three'
 /** 자물쇠 몸체 치수 — 다른 부품들이 이 값을 기준으로 배치됩니다 */
 export const LOCK = {
   bodyDepth: 0.42,
-  bevelThickness: 0.12,
-  bevelSize: 0.09,
+  bevelThickness: 0.15,
+  bevelSize: 0.11,
   /** 몸체 앞면 z */
-  frontZ: 0.42 / 2 + 0.12,
+  frontZ: 0.42 / 2 + 0.15,
   /** 열쇠 구멍 원 중심 y */
   keyholeY: -0.14,
   shackle: { halfSpan: 0.5, top: 1.5, leftBottom: 0.3, rightBottom: 0.74, radius: 0.1, lift: 0.44 },

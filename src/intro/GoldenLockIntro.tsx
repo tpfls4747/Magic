@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { gsap } from 'gsap'
-import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Suspense, type CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import * as THREE from 'three'
 import { createIntroAnim } from './animState'
 import { emitIntroEvent, INTRO_EVENTS, type IntroCallbacks, type IntroPhase } from './events'
@@ -61,6 +61,13 @@ export function GoldenLockIntro({
   const canvasRef = useRef<HTMLDivElement>(null)
   const enteredRef = useRef(false)
   const startedRef = useRef(false)
+  // 각 이벤트가 정확히 한 번만 발행되도록 보장 (건너뛰기·재렌더·수동 걷기와 겹쳐도)
+  const firedRef = useRef(new Set<string>())
+  const once = useCallback((key: string, fn: () => void) => {
+    if (firedRef.current.has(key)) return
+    firedRef.current.add(key)
+    fn()
+  }, [])
 
   // 최신 콜백을 ref 로 보관 — 타임라인이 오래된 클로저를 잡지 않도록
   const cbRef = useRef(callbacks)
@@ -83,20 +90,26 @@ export function GoldenLockIntro({
     })
   }, [])
 
+  const finish = useCallback(() => {
+    once('complete', () => {
+      setPhase('done')
+      cbRef.current.onComplete?.()
+      emitIntroEvent(INTRO_EVENTS.complete)
+    })
+  }, [once, setPhase])
+
   const reveal = useCallback(() => {
-    if (!flashRef.current) return
+    if (!flashRef.current || firedRef.current.has('reveal')) return
+    firedRef.current.add('reveal')
     setPhase('revealing')
     gsap.to(flashRef.current, {
       autoAlpha: 0,
-      duration: reducedMotion ? 0.6 : 1.2,
+      scale: 1.18,
+      duration: reducedMotion ? 0.6 : 1.3,
       ease: 'power2.out',
-      onComplete: () => {
-        setPhase('done')
-        cbRef.current.onComplete?.()
-        emitIntroEvent(INTRO_EVENTS.complete)
-      },
+      onComplete: finish,
     })
-  }, [reducedMotion, setPhase])
+  }, [finish, reducedMotion, setPhase])
 
   const start = useCallback(() => {
     if (startedRef.current) return
@@ -109,31 +122,43 @@ export function GoldenLockIntro({
       anim,
       { ui: uiRef.current, flash: flashRef.current, canvas: canvasRef.current },
       {
-        onUnlocked: () => {
-          cbRef.current.onUnlocked?.()
-          emitIntroEvent(INTRO_EVENTS.unlocked)
-        },
+        onUnlocked: () =>
+          once('unlocked', () => {
+            cbRef.current.onUnlocked?.()
+            emitIntroEvent(INTRO_EVENTS.unlocked)
+          }),
         onZoom: () => setPhase('zooming'),
-        onCovered: () => {
-          setPhase('covered')
-          cbRef.current.onCovered?.()
-          emitIntroEvent(INTRO_EVENTS.covered)
+        onCovered: () =>
+          once('covered', () => {
+            setPhase('covered')
+            cbRef.current.onCovered?.()
+            emitIntroEvent(INTRO_EVENTS.covered)
+          }),
+        onRevealStart: () => {
+          firedRef.current.add('reveal')
+          setPhase('revealing')
         },
-        onRevealStart: () => setPhase('revealing'),
-        onComplete: () => {
-          setPhase('done')
-          cbRef.current.onComplete?.()
-          emitIntroEvent(INTRO_EVENTS.complete)
-        },
+        onComplete: finish,
       },
       { reducedMotion, autoReveal },
     )
-  }, [anim, autoReveal, reducedMotion, setPhase])
+  }, [anim, autoReveal, finish, once, reducedMotion, setPhase])
 
+  /** 건너뛰기: 같은 시퀀스를 빠르게 재생 (이벤트 순서·횟수는 그대로) */
   const skip = useCallback(() => {
     start()
     tlRef.current?.timeScale(4)
   }, [start])
+
+  // Esc 키로도 건너뛰기
+  useEffect(() => {
+    if (!skippable) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') skip()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [skip, skippable])
 
   // autoReveal=false 일 때 호스트 신호로 걷기
   useEffect(() => {
@@ -158,8 +183,9 @@ export function GoldenLockIntro({
           gl={{
             antialias: true,
             powerPreference: 'high-performance',
-            toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.05,
+            // Neutral: 금색의 색조를 보존 (ACES 의 노랑→갈색 변이 방지)
+            toneMapping: THREE.NeutralToneMapping,
+            toneMappingExposure: 1.0,
           }}
           onCreated={handleCreated}
         >
@@ -193,7 +219,13 @@ export function GoldenLockIntro({
 
       <div ref={flashRef} className="gl-intro__flash" aria-hidden="true">
         <span className="gl-intro__flash-core" />
+        <span className="gl-intro__flash-ring" />
         <span className="gl-intro__flash-rays" />
+        <span className="gl-intro__flash-sparkles">
+          {Array.from({ length: 14 }, (_, i) => (
+            <i key={i} style={{ '--i': i } as CSSProperties} />
+          ))}
+        </span>
       </div>
     </div>
   )
