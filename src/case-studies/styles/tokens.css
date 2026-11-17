@@ -1,0 +1,48 @@
+/*
+ * Case Study 디자인 토큰.
+ * 전시관 토큰(src/styles/tokens.css)과 같은 색을 쓰되, 모든 값을 .cs-root 안에만 정의해
+ * 메인 앱의 전역 스타일과 서로 영향을 주지 않도록 합니다.
+ */
+.cs-root {
+  /* Color — Ivory & Cream base */
+  --cs-ivory: var(--color-ivory, #faf6ee);
+  --cs-cream: var(--color-cream, #f3ebdd);
+  --cs-paper: #fffdf8;
+  --cs-ink: var(--color-ink, #3a3140);
+  --cs-ink-soft: rgba(58, 49, 64, 0.74);
+  --cs-ink-mute: rgba(58, 49, 64, 0.52);
+
+  /* Color — Lavender & Champagne accents */
+  --cs-lavender: var(--color-lavender, #cfc3e6);
+  --cs-lavender-pale: #efeaf7;
+  --cs-lavender-ink: var(--color-lavender-ink, #7f6cb3);
+  --cs-gold: var(--color-champagne-gold, #dcc08e);
+  --cs-gold-deep: var(--color-gold-deep, #a8874f);
+  --cs-gold-ink: #8c6d3c;
+  --cs-gold-pale: #f5ead3;
+  --cs-hairline: rgba(168, 135, 79, 0.28);
+  --cs-hairline-soft: rgba(168, 135, 79, 0.16);
+
+  /* Type */
+  /* 한글은 Cormorant 에 글리프가 없으므로 명조 계열로 이어지도록 */
+  --cs-serif: 'Cormorant Garamond', 'Times New Roman', 'AppleMyungjo', 'Nanum Myeongjo',
+    'Noto Serif KR', serif;
+  --cs-sans: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo',
+    'Noto Sans KR', Roboto, sans-serif;
+
+  /* Layout */
+  --cs-topbar-h: 60px;
+  --cs-gutter: clamp(20px, 5vw, 64px);
+  --cs-max: 1320px;
+  --cs-text: 680px;
+  --cs-radius: 22px;
+  --cs-radius-sm: 14px;
+
+  /* Motion */
+  --cs-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --cs-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Elevation — 아주 옅은 따뜻한 그림자 */
+  --cs-shadow-sm: 0 1px 2px rgba(80, 60, 40, 0.05), 0 6px 18px rgba(80, 60, 40, 0.05);
+  --cs-shadow-md: 0 2px 6px rgba(80, 60, 40, 0.05), 0 22px 48px -12px rgba(80, 60, 40, 0.14);
+}

@@ -1,0 +1,18 @@
+/* 독립 미리보기 전용 최소 리셋 — 메인 앱의 global.css 를 대신합니다 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: clip;
+}
+
+body {
+  background: #faf6ee;
+  -webkit-font-smoothing: antialiased;
+}
