@@ -6,6 +6,8 @@ import { champagneGoldMaterial, stoneMaterial } from './materials'
 
 export const PEDESTAL_HEIGHT = 1.36
 const PLINTH_HEIGHT = 0.08
+/** 전시대 상판 높이 (바닥 기준) — 전시 작품 배치 기준점 */
+export const PEDESTAL_TOP = PLINTH_HEIGHT + PEDESTAL_HEIGHT
 
 /** 전시대 아래 크림 스톤 원형 단 */
 function plinthProfile() {

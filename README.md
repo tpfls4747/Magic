@@ -24,6 +24,12 @@
 |---|---|
 | ![데스크톱](docs/screenshots/step2-desktop.jpg) | ![모바일](docs/screenshots/step2-mobile.jpg) |
 
+### 작품 1 — Seat Swap (근접 촬영)
+
+| 기본 상태 | 마우스 오버 — 좌석 교환 중 |
+|---|---|
+| ![Seat Swap](docs/screenshots/step3-seat-swap.jpg) | ![Seat Swap hover](docs/screenshots/step3-seat-swap-hover.jpg) |
+
 ## 개발 환경
 
 - **React + Vite + TypeScript**
@@ -72,6 +78,9 @@ src/
 | `Lighting.tsx` | 주광(그림자), 스포트라이트, Lightformer 환경맵 |
 | `Atmosphere.tsx` | 포털 너머 빛 배경, 금빛 입자 |
 | `CameraRig.tsx` | 반응형 화각 + 마우스 패럴랙스 |
+| `exhibits/SeatSwapExhibit.tsx` | 작품 1: 떠 있는 두 티켓, hover/탭 시 좌석 교환 애니메이션 |
+| `exhibits/Ticket.tsx` | 노치·두께·금박 모서리·금박 테두리/인장을 가진 입체 티켓 |
+| `exhibits/ticketArt.ts` | 티켓 인쇄면(잉크·금박·뒷면 무늬) 캔버스 텍스처 |
 
 외부 3D 모델·HDRI 없이 모두 코드로 생성합니다.
 
@@ -81,5 +90,7 @@ src/
 
 - [x] 프로젝트 초기 설정
 - [x] STEP 2 — 3D 전시관 첫 장면 (The Floating Atelier)
+- [x] STEP 3 — 작품 1: Seat Swap (공연 좌석 교환 UX)
+- [ ] 작품 2·3 (스마트폰, 브라우저)
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

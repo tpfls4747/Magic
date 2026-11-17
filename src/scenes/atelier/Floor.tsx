@@ -166,7 +166,7 @@ export function Floor({ quality }: { quality: 'high' | 'low' }) {
         position={[0, 0.004, HALL_CENTER_Z]}
         scale={[13, 30]}
         resolution={high ? 1024 : 512}
-        far={2.4}
+        far={1.6}
         blur={2.4}
         opacity={0.42}
         color="#5b4a40"
