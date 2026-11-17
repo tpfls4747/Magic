@@ -1,0 +1,210 @@
+/* 작품 근접 화면 패널 — 가로: 오른쪽 세로 중앙 / 세로: 하단 */
+.exhibit-panel {
+  position: fixed;
+  top: 50%;
+  right: max(clamp(16px, 6vw, 112px), env(safe-area-inset-right, 0px));
+  width: min(400px, 34vw);
+  /* --reveal-y: 나타날 때 살짝 떠오르는 움직임 (ScrollTour 가 설정) */
+  transform: translateY(calc(-50% + var(--reveal-y, 0px)));
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 2;
+}
+
+.exhibit-panel__card {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 글자 뒤의 은은한 아이보리 빛 — 건축 배경 위에서도 읽히도록 (테두리 없는 부드러운 번짐) */
+.exhibit-panel::before {
+  content: '';
+  position: absolute;
+  inset: -22% -30% -22% -24%;
+  background: radial-gradient(
+    closest-side,
+    rgba(248, 243, 234, 0.82) 0%,
+    rgba(248, 243, 234, 0.6) 55%,
+    rgba(248, 243, 234, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.exhibit-panel__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-lavender-ink);
+}
+
+.exhibit-panel__title {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(44px, 4.6vw, 72px);
+  line-height: 0.95;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.exhibit-panel__subtitle {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: #8c6d3c;
+}
+
+.exhibit-panel__summary {
+  margin: 4px 0 0;
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+  word-break: keep-all;
+}
+
+.exhibit-panel__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.case-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border: 1px solid var(--color-gold-deep);
+  border-radius: 999px;
+  background: rgba(250, 246, 238, 0.72);
+  color: var(--color-ink);
+  font: 500 12px/1 var(--font-sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.case-button:hover:not(:disabled) {
+  background: var(--color-ink);
+  color: var(--color-ivory);
+}
+
+.case-button:focus-visible {
+  outline: 2px solid var(--color-gold-deep);
+  outline-offset: 3px;
+}
+
+.case-button:disabled {
+  cursor: not-allowed;
+  border-color: rgba(168, 135, 79, 0.45);
+  color: rgba(58, 49, 64, 0.55);
+}
+
+.case-button__badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(207, 195, 230, 0.55);
+  color: var(--color-ink);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.case-button__arrow {
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.exhibit-panel__hint {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-soft);
+}
+
+.only-touch {
+  display: none;
+}
+
+@media (hover: none) {
+  .only-hover {
+    display: none;
+  }
+  .only-touch {
+    display: inline;
+  }
+}
+
+/* 세로 화면 — 작품은 화면 위쪽, 패널은 하단 */
+@media (max-aspect-ratio: 1/1) {
+  .exhibit-panel {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: auto;
+    transform: translateY(var(--reveal-y, 0px));
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding-top: 72px;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+  .exhibit-panel::before {
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(246, 240, 230, 0.94) 0%,
+      rgba(246, 240, 230, 0.86) 62%,
+      rgba(246, 240, 230, 0) 100%
+    );
+  }
+  .exhibit-panel__card {
+    gap: 10px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .exhibit-panel__title {
+    font-size: clamp(40px, 11vw, 56px);
+  }
+  .exhibit-panel__summary {
+    max-width: none;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .exhibit-panel__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin-top: 6px;
+  }
+}
+
+/* 높이가 낮은 가로 화면 */
+@media (max-height: 560px) and (min-aspect-ratio: 1/1) {
+  .exhibit-panel__card {
+    gap: 8px;
+  }
+  .exhibit-panel__title {
+    font-size: 40px;
+  }
+  .exhibit-panel__summary {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}

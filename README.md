@@ -24,6 +24,14 @@
 |---|---|
 | ![데스크톱](docs/screenshots/step2-desktop.jpg) | ![모바일](docs/screenshots/step2-mobile.jpg) |
 
+### 스크롤 투어 — 작품 근접 화면
+
+아래로 스크롤하면 카메라가 Seat Swap 전시대로 이동하고 프로젝트 소개가 나타납니다.
+
+| 데스크톱 | 모바일 |
+|---|---|
+| ![근접 화면 데스크톱](docs/screenshots/step3-1-exhibit-desktop.jpg) | ![근접 화면 모바일](docs/screenshots/step3-1-exhibit-mobile.jpg) |
+
 ### 작품 1 — Seat Swap (근접 촬영)
 
 | 기본 상태 | 마우스 오버 — 좌석 교환 중 |
@@ -77,12 +85,20 @@ src/
 | `Pedestals.tsx` | 샴페인 골드 전시대 3개 |
 | `Lighting.tsx` | 주광(그림자), 스포트라이트, Lightformer 환경맵 |
 | `Atmosphere.tsx` | 포털 너머 빛 배경, 금빛 입자 |
-| `CameraRig.tsx` | 반응형 화각 + 마우스 패럴랙스 |
+| `CameraRig.tsx` | 반응형 화각 + 스크롤 투어 카메라 이동 + 마우스 패럴랙스 합성 |
+| `exhibits/layout.ts` | 작품 배치·크기 (근접 구도 계산에 공유) |
 | `exhibits/SeatSwapExhibit.tsx` | 작품 1: 떠 있는 두 티켓, hover/탭 시 좌석 교환 애니메이션 |
 | `exhibits/Ticket.tsx` | 노치·두께·금박 모서리·금박 테두리/인장을 가진 입체 티켓 |
 | `exhibits/ticketArt.ts` | 티켓 인쇄면(잉크·금박·뒷면 무늬) 캔버스 텍스처 |
 
 외부 3D 모델·HDRI 없이 모두 코드로 생성합니다.
+
+### 스크롤 투어 구조
+
+- `src/sections/ScrollTour.tsx` — 실제 스크롤 트랙 + GSAP ScrollTrigger. 스크롤 진행값을 `src/lib/tour.ts` 의 공유 객체에 기록하고, 메인 제목/프로젝트 패널의 표시를 제어합니다.
+- `CameraRig` 가 매 프레임 진행값을 읽어 전체 구도 ↔ 작품 근접 구도의 위치와 시선을 함께 보간합니다.
+- `src/sections/ExhibitPanel.tsx` — 프로젝트 소개 패널. `projects.ts` 의 `caseStudyUrl` 이 있으면 링크, 없으면 '준비 중' 비활성 버튼으로 표시됩니다.
+- 애니메이션 감소 설정에서는 이동 과정 없이 두 화면이 바로 전환됩니다.
 
 `@/` 경로 별칭은 `src/`를 가리킵니다. (예: `import { projects } from '@/data/projects'`)
 
@@ -91,6 +107,7 @@ src/
 - [x] 프로젝트 초기 설정
 - [x] STEP 2 — 3D 전시관 첫 장면 (The Floating Atelier)
 - [x] STEP 3 — 작품 1: Seat Swap (공연 좌석 교환 UX)
+- [x] STEP 3-1 — 스크롤 카메라 투어 (Seat Swap 근접 화면)
 - [ ] 작품 2·3 (스마트폰, 브라우저)
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

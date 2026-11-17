@@ -6,6 +6,8 @@
   --color-champagne-gold: #dcc08e;
   --color-gold-deep: #a8874f;
   --color-ink: #3a3140;
+  --color-ink-soft: rgba(58, 49, 64, 0.72);
+  --color-lavender-ink: #7f6cb3;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
   --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;

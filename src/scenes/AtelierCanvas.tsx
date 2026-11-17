@@ -34,7 +34,7 @@ export function AtelierCanvas() {
       >
         <color attach="background" args={[PALETTE.fog]} />
         <fog attach="fog" args={[PALETTE.fog, 22, 62]} />
-        <CameraRig enableParallax={animate} />
+        <CameraRig enableParallax={animate} reducedMotion={reducedMotion} />
         <Suspense fallback={null}>
           <Lighting quality={quality} />
           <Architecture />

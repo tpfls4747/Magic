@@ -6,7 +6,7 @@ import './HeroOverlay.css'
  */
 export function HeroOverlay() {
   return (
-    <div className="hero-overlay" aria-hidden={false}>
+    <div className="hero-overlay">
       <div className="hero-overlay__vignette" />
 
       <header className="hero-overlay__bar">
@@ -14,14 +14,14 @@ export function HeroOverlay() {
         <span className="hero-overlay__meta">UX/UI Portfolio · 2026</span>
       </header>
 
-      <div className="hero-overlay__title">
+      <div className="hero-overlay__title" data-tour="hero-title">
         <p className="hero-overlay__eyebrow">An Exhibition of Three Works</p>
         <h1>
           The Floating <em>Atelier</em>
         </h1>
       </div>
 
-      <div className="hero-overlay__hint" aria-hidden="true">
+      <div className="hero-overlay__hint" data-tour="hint" aria-hidden="true">
         <span>Scroll to enter</span>
         <i />
       </div>

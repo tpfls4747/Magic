@@ -1,8 +1,7 @@
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { PEDESTALS } from '../constants'
-import { PEDESTAL_TOP } from '../Pedestals'
+import { SEAT_SWAP } from './layout'
 import { Ticket } from './Ticket'
 import type { TicketInfo } from './ticketArt'
 
@@ -35,17 +34,8 @@ const SWAP_DURATION = 1.25
 /** 모바일 탭 후 원래 자리로 돌아오기까지 (ms) */
 const TOUCH_RETURN_DELAY = 3200
 
-/** 전시대 상판 위 작품 중심 높이 */
-const EXHIBIT_LIFT = 0.5
-/** 원거리에서도 읽히도록 실제 티켓보다 약간 크게 */
-const EXHIBIT_SCALE = 1.22
 
 const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
-
-/** 카메라 쪽을 향하도록 하는 y 회전 (기본 카메라 위치 기준) */
-function yawTowardCamera(x: number, z: number) {
-  return Math.atan2(0 - x, 7.2 - z)
-}
 
 const tmpPos = new THREE.Vector3()
 const tmpQuat = new THREE.Quaternion()
@@ -61,8 +51,6 @@ export function SeatSwapExhibit({
   animate: boolean
   castShadow: boolean
 }) {
-  const [px, , pz] = PEDESTALS[0].position
-  const yaw = useMemo(() => yawTowardCamera(px, pz), [px, pz])
 
   const ticketA = useRef<THREE.Group>(null)
   const ticketB = useRef<THREE.Group>(null)
@@ -75,6 +63,8 @@ export function SeatSwapExhibit({
   useEffect(() => () => void (document.body.style.cursor = ''), [])
 
   // ── 인터랙션: 마우스는 hover, 터치는 탭(일정 시간 뒤 자동 복귀)
+  //    탭은 pointerup 에서 처리 — 화면을 끌어 스크롤하면 브라우저가 pointercancel 을 보내므로
+  //    스크롤하려다 티켓이 바뀌는 일이 없습니다.
   const onOver = (e: ThreeEvent<PointerEvent>) => {
     if (e.pointerType === 'touch') return
     e.stopPropagation()
@@ -151,12 +141,12 @@ export function SeatSwapExhibit({
   })
 
   return (
-    <group position={[px, PEDESTAL_TOP + EXHIBIT_LIFT, pz]} rotation-y={yaw} scale={EXHIBIT_SCALE}>
+    <group position={SEAT_SWAP.center} rotation-y={SEAT_SWAP.yaw} scale={SEAT_SWAP.scale}>
       <Ticket ref={ticketA} info={TICKETS[0]} castShadow={castShadow} />
       <Ticket ref={ticketB} info={TICKETS[1]} castShadow={castShadow} />
 
       {/* 마우스·터치 감지 영역 — 움직이는 티켓보다 넉넉하게, 화면에는 보이지 않음 */}
-      <mesh onPointerOver={onOver} onPointerOut={onOut} onPointerDown={onTap}>
+      <mesh onPointerOver={onOver} onPointerOut={onOut} onPointerUp={onTap}>
         <boxGeometry args={[1.05, 0.62, 0.55]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>

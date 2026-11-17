@@ -47,6 +47,7 @@
   bottom: clamp(72px, 12vh, 132px);
   text-align: center;
   padding: 0 16px;
+  transform: translateY(var(--reveal-y, 0px));
 }
 
 .hero-overlay__eyebrow {
