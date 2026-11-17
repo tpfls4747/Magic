@@ -159,9 +159,13 @@ function Vault() {
   return (
     <group position={[0, HALL.springHeight, HALL_CENTER_Z]}>
       <mesh geometry={vaultGeo}>
+        {/* 천장은 아래를 향해 어두워지기 쉬워, 라벤더빛이 아주 옅게 감도는 자체 발광으로 공기감을 줍니다 */}
         <meshStandardMaterial
           color={plasterMaterial.color}
           roughness={0.95}
+          emissive="#c9bde4"
+          emissiveIntensity={0.2}
+          envMapIntensity={0.9}
           side={THREE.BackSide}
         />
       </mesh>

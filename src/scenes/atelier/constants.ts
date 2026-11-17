@@ -37,8 +37,10 @@ export const PALETTE = {
   champagneLight: '#ecd7a8',
   lavender: '#cfc3e6',
   lavenderMist: '#e9e2f1',
+  lavenderDeep: '#b9a6dc',
+  lavenderGlow: '#d9cdef',
   warmLight: '#fff1dc',
-  fog: '#f1e9de',
+  fog: '#eee6e2',
 } as const
 
 /** 전시대 배치 — 중앙 하나를 뒤로 물려 깊이감 있는 삼각 구도를 만듭니다. */

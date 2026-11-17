@@ -1,7 +1,7 @@
-import { MeshReflectorMaterial } from '@react-three/drei'
+import { ContactShadows, MeshReflectorMaterial } from '@react-three/drei'
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { HALL, PALETTE, PEDESTALS } from './constants'
+import { HALL, HALL_CENTER_Z, PALETTE, PEDESTALS } from './constants'
 import { floorInlayMaterial } from './materials'
 
 const FLOOR_SIZE: [number, number] = [40, 56]
@@ -146,20 +146,31 @@ export function Floor({ quality }: { quality: 'high' | 'low' }) {
           map={marble}
           color="#ffffff"
           resolution={1024}
-          blur={high ? [420, 120] : [260, 90]}
-          mixBlur={1}
-          mixStrength={high ? 1.6 : 1.2}
-          mixContrast={1}
-          mirror={0.6}
-          depthScale={1.1}
-          minDepthThreshold={0.35}
-          maxDepthThreshold={1.3}
-          roughness={0.55}
+          blur={high ? [300, 60] : [220, 60]}
+          mixBlur={0.8}
+          mixStrength={high ? 0.95 : 0.85}
+          mixContrast={1.18}
+          mirror={0.5}
+          depthScale={1.5}
+          minDepthThreshold={0.5}
+          maxDepthThreshold={1.6}
+          roughness={0.4}
           metalness={0.05}
-          envMapIntensity={0.8}
+          envMapIntensity={0.42}
         />
       </mesh>
       <Inlays />
+      {/* 기둥·전시대·벽 밑동이 바닥에 닿는 부분의 부드러운 접지 그림자 (정적이라 한 번만 렌더) */}
+      <ContactShadows
+        frames={1}
+        position={[0, 0.004, HALL_CENTER_Z]}
+        scale={[13, 30]}
+        resolution={high ? 1024 : 512}
+        far={2.4}
+        blur={2.4}
+        opacity={0.42}
+        color="#5b4a40"
+      />
     </group>
   )
 }
