@@ -1,0 +1,798 @@
+/*
+ * About — Behind the Magic
+ * 모든 클래스는 ab- 접두사, 토큰은 .ab-root 안에서만 정의합니다 (전역 CSS 변경 없음).
+ */
+.ab-root {
+  --ab-ivory: var(--color-ivory, #faf6ee);
+  --ab-cream: var(--color-cream, #f3ebdd);
+  --ab-paper: #fffdf8;
+  --ab-scene: #ece2d6;
+  --ab-ink: var(--color-ink, #3a3140);
+  --ab-ink-soft: rgba(58, 49, 64, 0.74);
+  --ab-ink-mute: rgba(58, 49, 64, 0.54);
+  --ab-lavender: var(--color-lavender, #cfc3e6);
+  --ab-lavender-pale: #efeaf7;
+  --ab-lavender-ink: var(--color-lavender-ink, #7f6cb3);
+  --ab-gold: var(--color-champagne-gold, #dcc08e);
+  --ab-gold-deep: var(--color-gold-deep, #a8874f);
+  --ab-gold-ink: #8c6d3c;
+  --ab-hairline: rgba(168, 135, 79, 0.3);
+  --ab-hairline-soft: rgba(168, 135, 79, 0.16);
+  --ab-serif: 'Cormorant Garamond', 'Times New Roman', 'AppleMyungjo', 'Noto Serif KR', serif;
+  --ab-sans: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR',
+    sans-serif;
+  --ab-gutter: clamp(20px, 5vw, 64px);
+  --ab-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: relative;
+  background: var(--ab-scene);
+  color: var(--ab-ink);
+  font-family: var(--ab-sans);
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ab-root *,
+.ab-root *::before,
+.ab-root *::after {
+  box-sizing: border-box;
+}
+
+.ab-root :where(h2, h3, h4, h5, p, ol, ul) {
+  margin: 0;
+}
+
+.ab-root :where(ol, ul) {
+  padding: 0;
+  list-style: none;
+}
+
+.ab-root :focus-visible {
+  outline: 2px solid var(--ab-gold-deep);
+  outline-offset: 3px;
+}
+
+.ab-root [tabindex='-1']:focus {
+  outline: none;
+}
+
+.ab-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ───────────────────────────── Stage ───────────────────────────── */
+
+.ab-stage {
+  position: relative;
+  height: min(100svh, 940px);
+  min-height: 580px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ab-stage > div:first-child {
+  position: absolute !important;
+  inset: 0;
+}
+
+.ab-root.is-pointing .ab-stage canvas {
+  cursor: pointer;
+}
+
+/* 소개 글 뒤의 부드러운 아이보리 빛 — 3D 배경 위에서도 읽히도록 */
+.ab-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 60% at 12% 14%, rgba(248, 243, 234, 0.82), rgba(248, 243, 234, 0) 70%),
+    linear-gradient(180deg, rgba(236, 226, 214, 0) 70%, rgba(236, 226, 214, 0.55) 100%);
+  transition: opacity 0.8s ease;
+}
+
+.ab-root.is-open .ab-stage::after {
+  opacity: 0;
+}
+
+.ab-stage__loading,
+.ab-stage__fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 50% at 50% 70%, rgba(255, 249, 238, 0.9), transparent 70%),
+    linear-gradient(180deg, #e6dccf, var(--ab-scene));
+}
+
+.ab-stage__loading {
+  animation: ab-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes ab-breathe {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 3D 소품 이름표 */
+.ab-object-label {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--ab-hairline, rgba(168, 135, 79, 0.3));
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.92);
+  color: #3a3140;
+  font: 500 10.5px/1 system-ui, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(70, 50, 40, 0.12);
+  animation: ab-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ab-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* ───────────────────────────── Intro ───────────────────────────── */
+
+.ab-intro {
+  position: absolute;
+  top: clamp(32px, 7vh, 88px);
+  left: var(--ab-gutter);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 470px;
+  pointer-events: none;
+  transition:
+    opacity 0.6s ease,
+    transform 0.8s var(--ab-ease),
+    visibility 0s linear 0s;
+}
+
+.ab-intro > * {
+  pointer-events: auto;
+}
+
+.ab-root.is-open .ab-intro {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-12px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.6s var(--ab-ease),
+    visibility 0s linear 0.5s;
+}
+
+.ab-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ab-lavender-ink);
+}
+
+.ab-eyebrow__rule {
+  width: 40px;
+  height: 1px;
+  background: var(--ab-gold);
+}
+
+.ab-title {
+  font-family: var(--ab-serif);
+  font-size: clamp(44px, 5.6vw, 88px);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.ab-title em {
+  font-style: italic;
+  color: var(--ab-gold-deep);
+}
+
+.ab-lead {
+  max-width: 34ch;
+  font-size: 15.5px;
+  line-height: 1.75;
+  color: var(--ab-ink-soft);
+}
+
+.ab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 6px;
+}
+
+.ab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--ab-gold-deep);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.7);
+  color: var(--ab-ink);
+  font: 500 12px/1 var(--ab-sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.35s var(--ab-ease);
+}
+
+.ab-button--primary {
+  border-color: var(--ab-ink);
+  background: var(--ab-ink);
+  color: var(--ab-ivory);
+}
+
+.ab-button--primary:hover {
+  background: #2c2531;
+  transform: translateY(-2px);
+}
+
+.ab-button--ghost {
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0 6px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 14px;
+  text-decoration: underline;
+  text-decoration-color: var(--ab-hairline);
+  text-underline-offset: 6px;
+}
+
+.ab-button--ghost:hover {
+  text-decoration-color: var(--ab-gold-deep);
+}
+
+.ab-button__arrow {
+  letter-spacing: 0;
+  transition: transform 0.35s var(--ab-ease);
+}
+
+.ab-button:hover .ab-button__arrow {
+  transform: translateX(3px);
+}
+
+/* ───────────────────────────── Desk object nav ───────────────────────────── */
+
+.ab-desknav {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(18px, 3.5vh, 36px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100% - 2 * var(--ab-gutter));
+  transform: translateX(-50%);
+}
+
+.ab-desknav__title {
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ab-ink-mute);
+}
+
+.ab-desknav__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px 0 14px;
+  border: 1px solid var(--ab-hairline-soft);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.72);
+  color: var(--ab-ink);
+  font: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    transform 0.35s var(--ab-ease);
+}
+
+.ab-chip svg {
+  color: var(--ab-gold-deep);
+  flex: none;
+}
+
+.ab-chip__label {
+  font-family: var(--ab-serif);
+  font-size: 18px;
+  font-style: italic;
+  line-height: 1;
+}
+
+.ab-chip__hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ab-chip:hover,
+.ab-chip.is-active {
+  border-color: var(--ab-gold-deep);
+  background: var(--ab-paper);
+  transform: translateY(-2px);
+}
+
+.ab-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ───────────────────────────── Reader (open diary) ───────────────────────────── */
+
+.ab-reader {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(16px, 3vh, 30px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  animation: ab-reader-in 0.7s var(--ab-ease) 1.5s both;
+}
+
+@keyframes ab-reader-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+
+.ab-reader__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--ab-hairline-soft);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow:
+    0 2px 6px rgba(70, 50, 40, 0.05),
+    0 18px 40px -16px rgba(70, 50, 40, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ab-ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ab-ink);
+  font: 500 11px/1 var(--ab-sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.ab-ctrl:hover:not(:disabled) {
+  background: var(--ab-lavender-pale);
+}
+
+.ab-ctrl:disabled {
+  color: rgba(58, 49, 64, 0.3);
+  cursor: default;
+}
+
+.ab-ctrl--close {
+  color: var(--ab-gold-ink);
+}
+
+.ab-reader__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 132px;
+  padding: 0 8px;
+  line-height: 1.15;
+}
+
+.ab-reader__count {
+  font-family: var(--ab-serif);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--ab-gold-deep);
+}
+
+.ab-reader__title {
+  font-family: var(--ab-serif);
+  font-size: 19px;
+  font-style: italic;
+}
+
+.ab-reader__divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 2px;
+  background: var(--ab-hairline);
+}
+
+.ab-reader__hint {
+  font-size: 11.5px;
+  color: var(--ab-ink-mute);
+}
+
+.ab-reader__hint kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--ab-hairline);
+  border-radius: 5px;
+  background: rgba(255, 253, 248, 0.7);
+  font: 500 10px/1 var(--ab-sans);
+}
+
+.ab-linkbtn {
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--ab-ink-soft);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* 좁은 화면 — 3D 아래 읽기 시트 */
+.ab-reader--sheet {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  z-index: 3;
+  align-items: stretch;
+  gap: 0;
+  margin-top: -22px;
+  transform: none;
+  border-radius: 22px 22px 0 0;
+  background: var(--ab-ivory);
+  box-shadow: 0 -18px 40px -24px rgba(70, 50, 40, 0.35);
+  animation: ab-sheet-in 0.7s var(--ab-ease) 0.9s both;
+}
+
+@keyframes ab-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.ab-reader__sheet {
+  padding: 32px var(--ab-gutter) 24px;
+}
+
+.ab-reader--sheet .ab-reader__controls {
+  position: sticky;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  align-self: center;
+  margin: 0 0 18px;
+}
+
+.ab-reader--sheet .ab-ctrl {
+  padding: 0 12px;
+}
+
+.ab-reader--sheet .ab-ctrl__text {
+  display: none;
+}
+
+.ab-reader--sheet .ab-ctrl--close .ab-ctrl__text {
+  display: inline;
+}
+
+/* ───────────────────────────── Page content (HTML) ───────────────────────────── */
+
+.ab-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ab-page__number {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ab-lavender-ink);
+}
+
+.ab-page__title {
+  margin-top: 6px;
+  font-family: var(--ab-serif);
+  font-size: clamp(38px, 4vw, 52px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.ab-page__subtitle {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ab-gold-ink);
+}
+
+.ab-page__intro {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.ab-page__block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ab-hairline-soft);
+}
+
+.ab-page__block-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ab-page__items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  counter-reset: ab-item;
+}
+
+.ab-page__item {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding-left: 36px;
+}
+
+.ab-page__item::before {
+  counter-increment: ab-item;
+  content: counter(ab-item, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  font-family: var(--ab-serif);
+  font-size: 15px;
+  color: var(--ab-gold-deep);
+}
+
+.ab-page__item-name {
+  font-family: var(--ab-serif);
+  font-size: 23px;
+  line-height: 1.2;
+}
+
+.ab-page__item-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ab-lavender-ink);
+}
+
+.ab-page__item-desc {
+  margin-top: 4px;
+  font-size: 14.5px;
+  color: var(--ab-ink-soft);
+}
+
+/* 상태 배지 */
+.ab-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-inline: 6px 0;
+  padding: 2px 8px 3px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  vertical-align: 0.15em;
+  white-space: nowrap;
+}
+
+.ab-badge--draft {
+  background: #f5ead3;
+  color: var(--ab-gold-ink);
+}
+
+.ab-badge--pending {
+  margin-inline: 0 8px;
+  border: 1px dashed rgba(127, 108, 179, 0.55);
+  background: var(--ab-lavender-pale);
+  color: var(--ab-lavender-ink);
+}
+
+.ab-pending__note {
+  color: var(--ab-ink-mute);
+  font-size: max(0.88em, 13px);
+}
+
+/* ───────────────────────────── Text view ───────────────────────────── */
+
+.ab-textview {
+  background: var(--ab-ivory);
+  border-top: 1px solid var(--ab-hairline-soft);
+  scroll-margin-top: 24px;
+}
+
+.ab-textview__inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(56px, 8vw, 104px) var(--ab-gutter);
+}
+
+.ab-textview__head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+
+.ab-textview__title {
+  font-family: var(--ab-serif);
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.ab-textview__title .ab-pending {
+  font-family: var(--ab-sans);
+  font-size: 16px;
+}
+
+.ab-textview__role {
+  color: var(--ab-ink-soft);
+}
+
+.ab-textview__pages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 2.4vw, 32px);
+}
+
+.ab-textview__page {
+  padding: clamp(24px, 2.6vw, 36px);
+  border: 1px solid var(--ab-hairline-soft);
+  border-radius: 20px;
+  background: var(--ab-paper);
+  scroll-margin-top: 24px;
+}
+
+.ab-textview__page:focus {
+  outline: 2px solid var(--ab-gold-deep) !important;
+  outline-offset: 3px;
+}
+
+/* ───────────────────────────── Responsive ───────────────────────────── */
+
+@media (max-width: 1023px) {
+  .ab-textview__pages {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 680px;
+  }
+}
+
+.ab-root.is-narrow .ab-stage {
+  height: max(100svh, 720px);
+  max-height: 900px;
+  min-height: 0;
+}
+
+.ab-root.is-narrow .ab-stage::after {
+  background:
+    linear-gradient(180deg, rgba(248, 243, 234, 0.9) 0%, rgba(248, 243, 234, 0.55) 32%, rgba(248, 243, 234, 0) 50%),
+    linear-gradient(0deg, rgba(236, 226, 214, 0.85) 0%, rgba(236, 226, 214, 0) 30%);
+}
+
+.ab-root.is-narrow .ab-intro {
+  top: 28px;
+  right: var(--ab-gutter);
+  gap: 12px;
+  max-width: none;
+}
+
+.ab-root.is-narrow .ab-title {
+  font-size: clamp(40px, 11vw, 56px);
+}
+
+.ab-root.is-narrow .ab-lead {
+  font-size: 14.5px;
+}
+
+.ab-root.is-narrow .ab-button {
+  min-height: 46px;
+  padding: 0 20px;
+}
+
+.ab-root.is-narrow .ab-desknav {
+  width: calc(100% - 2 * var(--ab-gutter));
+  max-width: 520px;
+}
+
+.ab-root.is-narrow .ab-desknav__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.ab-root.is-narrow .ab-chip {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 48px;
+}
+
+/* 펼쳤을 때 — 3D 다이어리는 위, 읽기 시트는 아래 */
+.ab-root.is-narrow.is-open .ab-stage {
+  height: 50svh;
+  min-height: 300px;
+}
+
+/* ───────────────────────────── Reduced motion ───────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-root *,
+  .ab-root *::before,
+  .ab-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+}
