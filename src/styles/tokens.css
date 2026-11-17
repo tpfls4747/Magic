@@ -1,10 +1,12 @@
-/* 디자인 토큰 — 컨셉 팔레트(크림 / 라벤더 / 샴페인 골드)의 초기 값.
-   실제 디자인 단계에서 조정합니다. */
+/* 디자인 토큰 — The Floating Atelier (크림 / 아이보리 / 라벤더 / 샴페인 골드) */
 :root {
-  --color-cream: #f8f3e8;
-  --color-lavender: #c9b8e8;
-  --color-champagne-gold: #d8bd84;
-  --color-ink: #2b2433;
+  --color-cream: #f3ebdd;
+  --color-ivory: #faf6ee;
+  --color-lavender: #cfc3e6;
+  --color-champagne-gold: #dcc08e;
+  --color-gold-deep: #a8874f;
+  --color-ink: #3a3140;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
 }

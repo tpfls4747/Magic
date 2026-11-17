@@ -18,6 +18,12 @@
 | 2 | 회원가입 UX 리디자인 | 3D 스마트폰 |
 | 3 | 개인 웹 프로토타입 | 입체 브라우저 |
 
+## 미리보기
+
+| 데스크톱 | 모바일 |
+|---|---|
+| ![데스크톱](docs/screenshots/step2-desktop.jpg) | ![모바일](docs/screenshots/step2-mobile.jpg) |
+
 ## 개발 환경
 
 - **React + Vite + TypeScript**
@@ -53,11 +59,27 @@ src/
   types/        공용 타입
 ```
 
+### 3D 장면 구성 (`src/scenes/atelier/`)
+
+| 파일 | 역할 |
+|---|---|
+| `constants.ts` | 공간 치수(m)·팔레트·전시대 배치 |
+| `geometry.ts` | 아치 벽·아키볼트·몰딩 프로파일(Lathe) 생성 헬퍼 |
+| `materials.ts` | 공유 머티리얼 (미장 벽, 크림 스톤, 샴페인 골드 등) |
+| `Architecture.tsx` | 아치 아케이드 측벽, 기둥, 리브 볼트 천장, 대형 포털·오큘러스 |
+| `Floor.tsx` | 반사 대리석 바닥(절차적 텍스처) + 금색 상감선 |
+| `Pedestals.tsx` | 샴페인 골드 전시대 3개 |
+| `Lighting.tsx` | 주광(그림자), 스포트라이트, Lightformer 환경맵 |
+| `Atmosphere.tsx` | 포털 너머 빛 배경, 금빛 입자 |
+| `CameraRig.tsx` | 반응형 화각 + 마우스 패럴랙스 |
+
+외부 3D 모델·HDRI 없이 모두 코드로 생성합니다.
+
 `@/` 경로 별칭은 `src/`를 가리킵니다. (예: `import { projects } from '@/data/projects'`)
 
 ## 진행 상태
 
 - [x] 프로젝트 초기 설정
-- [ ] 디자인 시스템 · 레이아웃
-- [ ] 3D 전시관 장면 · 황금 자물쇠 인트로
+- [x] STEP 2 — 3D 전시관 첫 장면 (The Floating Atelier)
+- [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

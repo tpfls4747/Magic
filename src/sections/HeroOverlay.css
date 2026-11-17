@@ -1,0 +1,121 @@
+.hero-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  color: var(--color-ink);
+}
+
+/* 렌즈 비네팅 — 가장자리를 아주 살짝 따뜻하게 눌러 시선을 중앙으로 */
+.hero-overlay__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 75% 70% at 50% 46%,
+    rgba(255, 250, 242, 0) 55%,
+    rgba(120, 100, 80, 0.16) 100%
+  );
+}
+
+.hero-overlay__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: clamp(18px, 3vw, 36px) clamp(16px, 4vw, 56px);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.hero-overlay__mark {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  letter-spacing: 0.32em;
+}
+
+.hero-overlay__meta {
+  opacity: 0.62;
+}
+
+.hero-overlay__title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(72px, 12vh, 132px);
+  text-align: center;
+  padding: 0 16px;
+}
+
+.hero-overlay__eyebrow {
+  margin: 0 0 14px;
+  font-size: 11px;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.hero-overlay__title h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(38px, 6.2vw, 92px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 24px rgba(255, 249, 240, 0.65);
+}
+
+.hero-overlay__title em {
+  font-style: italic;
+  color: var(--color-gold-deep);
+}
+
+.hero-overlay__hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 4vh, 40px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.hero-overlay__hint i {
+  display: block;
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(var(--color-gold-deep), transparent);
+}
+
+@media (max-width: 600px) {
+  .hero-overlay__meta {
+    display: none;
+  }
+  .hero-overlay__mark {
+    font-size: 13px;
+  }
+}
+
+/* 높이가 낮은 가로 화면 — 제목이 전시대를 가리지 않도록 축소 */
+@media (max-height: 560px) and (min-aspect-ratio: 1/1) {
+  .hero-overlay__title {
+    bottom: 44px;
+  }
+  .hero-overlay__title h1 {
+    font-size: clamp(28px, 4.4vw, 44px);
+  }
+  .hero-overlay__eyebrow {
+    margin-bottom: 8px;
+    font-size: 9px;
+  }
+  .hero-overlay__hint {
+    display: none;
+  }
+}
