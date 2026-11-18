@@ -4,5 +4,14 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/intro/**"],
+      "rules": {
+        "react/immutability": "off",
+        "react/only-export-components": "off"
+      }
+    }
+  ]
 }

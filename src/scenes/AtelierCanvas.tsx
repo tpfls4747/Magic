@@ -1,5 +1,5 @@
-import { Canvas } from '@react-three/fiber'
-import { Suspense, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Suspense, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { WebGLGate } from '@/components/WebGLGate'
 import { usePrefersReducedMotion, useQuality } from '@/hooks/useMediaQuery'
@@ -15,8 +15,33 @@ import { SignupExhibit } from './atelier/exhibits/SignupExhibit'
 import { WebPrototypeExhibit } from './atelier/exhibits/WebPrototypeExhibit'
 import './AtelierCanvas.css'
 
+/**
+ * 장면이 실제로 몇 프레임 그려진 뒤 한 번 알려줍니다.
+ * (셰이더 컴파일과 첫 렌더가 끝난 시점 — 인트로의 빛을 걷어도 끊김이 없는 때)
+ */
+function FirstFrames({ count = 3, onDone }: { count?: number; onDone?: () => void }) {
+  const frames = useRef(0)
+  const done = useRef(false)
+  useFrame(() => {
+    if (done.current) return
+    frames.current += 1
+    if (frames.current >= count) {
+      done.current = true
+      onDone?.()
+    }
+  })
+  return null
+}
+
+interface AtelierCanvasProps {
+  /** 장면의 첫 프레임들이 그려진 뒤 한 번 호출 */
+  onReady?: () => void
+  /** false: 서서히 나타나는 효과 없이 바로 표시 (Intro 의 빛 아래에서 미리 준비할 때) */
+  fadeIn?: boolean
+}
+
 /** The Floating Atelier — 3D 전시관 */
-export function AtelierCanvas() {
+export function AtelierCanvas({ onReady, fadeIn = true }: AtelierCanvasProps = {}) {
   const quality = useQuality()
   const reducedMotion = usePrefersReducedMotion()
   const [ready, setReady] = useState(false)
@@ -24,7 +49,7 @@ export function AtelierCanvas() {
 
   return (
     <WebGLGate>
-      <div className={`atelier-canvas${ready ? ' is-ready' : ''}`}>
+      <div className={`atelier-canvas${ready ? ' is-ready' : ''}${fadeIn ? '' : ' is-instant'}`}>
         <Canvas
           shadows="percentage"
           dpr={quality === 'high' ? [1, 1.75] : [1, 1.5]}
@@ -48,6 +73,7 @@ export function AtelierCanvas() {
             <SignupExhibit animate={animate} castShadow={quality === 'high'} />
             <WebPrototypeExhibit animate={animate} castShadow={quality === 'high'} />
             <Atmosphere quality={quality} animate={animate} />
+            <FirstFrames onDone={onReady} />
           </Suspense>
         </Canvas>
       </div>

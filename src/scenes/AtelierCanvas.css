@@ -9,6 +9,11 @@
   opacity: 1;
 }
 
+/* Intro 의 빛 아래에서 준비될 때는 페이드 없이 — 빛이 걷히는 순간 이미 완전히 그려져 있도록 */
+.atelier-canvas.is-instant {
+  transition: none;
+}
+
 .atelier-canvas canvas {
   display: block;
   touch-action: pan-y;

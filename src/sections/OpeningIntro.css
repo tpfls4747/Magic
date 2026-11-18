@@ -1,0 +1,9 @@
+/* Intro 를 전시관에 연결할 때만 덧붙이는 스타일 (Intro 자체 스타일은 src/intro 에 그대로) */
+
+/* 건너뛰기: 터치 기기에서도 누르기 쉬운 높이 (최소 44px) */
+@media (hover: none), (pointer: coarse) {
+  .opening-intro .gl-intro__skip {
+    min-height: 44px;
+    padding: 12px 18px;
+  }
+}

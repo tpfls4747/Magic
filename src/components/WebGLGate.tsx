@@ -1,15 +1,6 @@
 import { Component, useState, type ReactNode } from 'react'
+import { canUseWebGL } from '@/lib/webgl'
 import './WebGLGate.css'
-
-/** WebGL 을 쓸 수 있는 환경인지 미리 확인합니다 (렌더러를 만들기 전에). */
-function canUseWebGL() {
-  try {
-    const canvas = document.createElement('canvas')
-    return Boolean(canvas.getContext('webgl2') ?? canvas.getContext('webgl'))
-  } catch {
-    return false
-  }
-}
 
 /** 캔버스 초기화 중 오류가 나도 페이지 전체가 사라지지 않도록 3D 영역만 대체 화면으로 바꿉니다. */
 class CanvasErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
