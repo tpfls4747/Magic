@@ -41,3 +41,9 @@ export const SCREEN = (() => {
     radius: 0.018,
   } as const
 })()
+
+/**
+ * 화면을 두르는 낮은 턱 — 화면이 프레임 안쪽으로 들어가 앉은 것처럼 보이게 합니다.
+ * band: 턱의 폭, height: 앞면에서 솟은 높이 (화면은 그 안쪽 바닥에 놓임)
+ */
+export const SCREEN_LIP = { band: 0.012, height: 0.006 } as const

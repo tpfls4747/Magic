@@ -1,4 +1,4 @@
-import type * as THREE from 'three'
+import * as THREE from 'three'
 import { canvasTexture, type Draw } from './uiCanvas'
 
 /**
@@ -9,7 +9,8 @@ import { canvasTexture, type Draw } from './uiCanvas'
  *
  * 실제 작업물로 바꿀 때는 이 파일만 교체하면 됩니다.
  * - 배경 1장 + UI 레이어 여러 장(요소별 텍스처)
- * - 각 레이어의 펼쳐짐(깊이·방향)도 여기서 데이터로 정합니다. 3D 모델은 그대로 둡니다.
+ * - 각 레이어는 화면 안의 원래 위치(x·y)와 '깊이 계층(tier)'만 가집니다.
+ *   실제 깊이(m)는 전시 쪽(WebPrototypeExhibit)이 브라우저 크기와 카메라 시점에서 계산합니다.
  * 좌표는 1280 × 754 논리 픽셀(좌상단 기준) — 화면 영역 비율과 같습니다.
  */
 
@@ -21,12 +22,11 @@ export interface PageLayer {
   y: number
   w: number
   h: number
-  /** hover 때 살짝 떠오르는 깊이 (m) */
-  hoverDepth: number
-  /** 클릭으로 펼쳤을 때의 깊이 (m) */
-  openDepth: number
-  /** 펼쳤을 때 화면 평면에서 비켜나는 방향 (m) */
-  spread: [number, number]
+  /**
+   * 펼쳤을 때의 깊이 계층 — 1 이 화면에 가장 가깝고 숫자가 클수록 앞으로 나옵니다.
+   * 같은 계층의 레이어는 같은 평면에 놓여, 펼친 상태에서도 원래 화면 구성이 읽힙니다.
+   */
+  tier: number
   /** 떠오를 때 화면에 그림자를 드리울지 — 바탕이 있는 카드형 레이어만 (글자만 있는 레이어는 false) */
   shadow: boolean
   texture: THREE.CanvasTexture
@@ -35,15 +35,25 @@ export interface PageLayer {
 export interface PageContent {
   background: THREE.CanvasTexture
   layers: PageLayer[]
+  /** 가장 앞 계층 번호 */
+  maxTier: number
   dispose: () => void
 }
 
+// ── 색 — 아이보리 바탕 위에서 충분히 읽히도록 (대비는 #fbf8f2 바탕 기준)
 const SANS = 'system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif'
 const SERIF = '"Cormorant Garamond", "Times New Roman", serif'
-const INK = '#2f2836'
-const MUTED = '#8a8090'
-const LAVENDER = '#7f6cb3'
-const GOLD = '#b0904f'
+/** 본문·제목 — 대비 약 15:1 */
+const INK = '#241e2a'
+/** 보조 텍스트 — 대비 약 7:1 (이전 #8a8090 은 약 3.6:1) */
+const MUTED = '#5a5062'
+/** 라벤더 강조 — 대비 약 6.6:1 (이전 #7f6cb3 은 약 4.2:1) */
+const LAVENDER = '#5f4d99'
+/** 큰 글자용 골드 — 대비 약 4.7:1 */
+const GOLD_TEXT = '#8a6a2f'
+/** 장식용 골드 (선·아이콘) */
+const GOLD = '#a8843f'
+const CARD_BG = '#fffdf8'
 
 function text(
   ctx: CanvasRenderingContext2D,
@@ -68,22 +78,22 @@ function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: n
   ctx.roundRect(x, y, w, h, r)
 }
 
-/** 회색 막대로 표현한 본문 자리 (실제 문구 대신) */
+/** 막대로 표현한 본문 자리 (실제 문구 대신) */
 function lines(ctx: CanvasRenderingContext2D, x: number, y: number, widths: number[], gap = 16) {
-  ctx.fillStyle = 'rgba(47, 40, 54, 0.12)'
+  ctx.fillStyle = 'rgba(36, 30, 42, 0.2)'
   widths.forEach((w, i) => {
-    rr(ctx, x, y + i * gap, w, 7, 3.5)
+    rr(ctx, x, y + i * gap, w, 8, 4)
     ctx.fill()
   })
 }
 
-/** 레이어를 감싸는 카드 바탕 (반투명 아이보리 + 가는 테두리) */
+/** 카드 바탕 — 아이보리 + 또렷한 골드 테두리 */
 function card(ctx: CanvasRenderingContext2D, w: number, h: number, r = 18) {
-  rr(ctx, 1, 1, w - 2, h - 2, r)
-  ctx.fillStyle = '#fffdf9'
+  rr(ctx, 1.5, 1.5, w - 3, h - 3, r)
+  ctx.fillStyle = CARD_BG
   ctx.fill()
-  ctx.strokeStyle = 'rgba(176, 144, 79, 0.28)'
-  ctx.lineWidth = 1.5
+  ctx.strokeStyle = 'rgba(168, 132, 63, 0.55)'
+  ctx.lineWidth = 2
   ctx.stroke()
 }
 
@@ -97,68 +107,66 @@ const CARD_TOPICS = [
   { title: 'Responsive', icon: '▭' },
 ]
 
+/**
+ * 레이어 계층 — 페이지 구조를 따라 아래에서 위로:
+ * 1 푸터 · 2 카드 · 3 이미지 · 4 히어로 문구 · 5 CTA · 6 내비게이션(고정 헤더)
+ */
 const LAYERS: LayerSpec[] = [
   {
     name: 'navigation',
     x: 0,
     y: 0,
     w: 1280,
-    h: 64,
-    hoverDepth: 0.03,
-    openDepth: 0.36,
-    spread: [0, 0.05],
+    h: 68,
+    tier: 6,
     shadow: true,
     draw: (ctx, w, h) => {
-      ctx.fillStyle = 'rgba(255, 253, 249, 0.96)'
+      ctx.fillStyle = 'rgba(255, 253, 248, 0.98)'
       ctx.fillRect(0, 0, w, h)
-      ctx.fillStyle = 'rgba(176, 144, 79, 0.3)'
-      ctx.fillRect(0, h - 1.5, w, 1.5)
-      text(ctx, '◆', 56, 41, `400 18px ${SANS}`, GOLD)
-      text(ctx, 'Prototype', 82, 42, `italic 400 26px ${SERIF}`, INK)
+      ctx.fillStyle = 'rgba(168, 132, 63, 0.45)'
+      ctx.fillRect(0, h - 2, w, 2)
+      text(ctx, '◆', 56, 44, `400 18px ${SANS}`, GOLD)
+      text(ctx, 'Prototype', 82, 45, `italic 500 28px ${SERIF}`, INK)
       ;['Work', 'Studio', 'Journal', 'Contact'].forEach((label, i) =>
-        text(ctx, label, 640 + i * 110, 40, `500 14px ${SANS}`, MUTED, 'left', 1),
+        text(ctx, label, 610 + i * 116, 43, `600 16px ${SANS}`, MUTED, 'left', 0.5),
       )
-      rr(ctx, w - 176, 15, 120, 34, 17)
+      rr(ctx, w - 184, 15, 128, 38, 19)
       ctx.fillStyle = INK
       ctx.fill()
-      text(ctx, 'Get started', w - 116, 37, `500 13px ${SANS}`, '#ffffff', 'center')
+      text(ctx, 'Get started', w - 120, 40, `600 14px ${SANS}`, '#ffffff', 'center')
     },
   },
   {
     name: 'hero',
     x: 64,
     y: 112,
-    w: 560,
-    h: 236,
-    hoverDepth: 0.045,
-    openDepth: 0.3,
-    spread: [-0.03, 0.02],
+    w: 580,
+    h: 240,
+    tier: 4,
     shadow: false,
     draw: (ctx) => {
-      text(ctx, 'A LIVING INTERFACE', 2, 22, `600 13px ${SANS}`, LAVENDER, 'left', 4)
-      text(ctx, 'Design that', 0, 100, `400 72px ${SERIF}`, INK)
-      text(ctx, 'breathes.', 0, 172, `italic 400 72px ${SERIF}`, GOLD)
-      text(ctx, '재사용 가능한 컴포넌트로 구성한 랜딩 페이지 프로토타입', 2, 222, `400 17px ${SANS}`, MUTED)
+      text(ctx, 'A LIVING INTERFACE', 2, 22, `700 14px ${SANS}`, LAVENDER, 'left', 4)
+      text(ctx, 'Design that', 0, 100, `500 74px ${SERIF}`, INK)
+      text(ctx, 'breathes.', 0, 172, `italic 500 74px ${SERIF}`, GOLD_TEXT)
+      text(ctx, '재사용 가능한 컴포넌트로 구성한 랜딩 페이지 프로토타입', 2, 224, `500 19px ${SANS}`, MUTED)
     },
   },
   {
     name: 'cta',
     x: 64,
-    y: 368,
-    w: 380,
-    h: 54,
-    hoverDepth: 0.06,
-    openDepth: 0.46,
-    spread: [-0.05, -0.01],
+    y: 370,
+    w: 400,
+    h: 56,
+    tier: 5,
     shadow: true,
     draw: (ctx) => {
-      rr(ctx, 0, 0, 222, 54, 27)
+      rr(ctx, 0, 0, 232, 56, 28)
       ctx.fillStyle = INK
       ctx.fill()
-      text(ctx, 'Explore prototype  →', 111, 33, `500 15px ${SANS}`, '#ffffff', 'center')
-      text(ctx, 'View components', 252, 33, `500 15px ${SANS}`, INK)
-      ctx.fillStyle = 'rgba(47, 40, 54, 0.35)'
-      ctx.fillRect(252, 40, 122, 1.2)
+      text(ctx, 'Explore prototype  →', 116, 34, `600 16px ${SANS}`, '#ffffff', 'center')
+      text(ctx, 'View components', 262, 34, `600 16px ${SANS}`, INK)
+      ctx.fillStyle = 'rgba(36, 30, 42, 0.5)'
+      ctx.fillRect(262, 41, 132, 1.5)
     },
   },
   {
@@ -166,10 +174,8 @@ const LAYERS: LayerSpec[] = [
     x: 676,
     y: 96,
     w: 540,
-    h: 326,
-    hoverDepth: 0.035,
-    openDepth: 0.2,
-    spread: [0.05, 0.03],
+    h: 330,
+    tier: 3,
     shadow: true,
     draw: (ctx, w, h) => {
       // 이미지 자리: 라벤더 → 샴페인 그라데이션 위의 아치 실루엣
@@ -177,12 +183,12 @@ const LAYERS: LayerSpec[] = [
       ctx.save()
       ctx.clip()
       const g = ctx.createLinearGradient(0, 0, w, h)
-      g.addColorStop(0, '#d9cdef')
-      g.addColorStop(0.55, '#efe3d6')
-      g.addColorStop(1, '#e6d0a6')
+      g.addColorStop(0, '#cdbfea')
+      g.addColorStop(0.55, '#e9dccd')
+      g.addColorStop(1, '#ddc596')
       ctx.fillStyle = g
       ctx.fillRect(0, 0, w, h)
-      ctx.fillStyle = 'rgba(255, 253, 249, 0.55)'
+      ctx.fillStyle = 'rgba(255, 253, 248, 0.6)'
       for (const [cx, aw, ah] of [
         [150, 110, 220],
         [290, 140, 270],
@@ -197,13 +203,17 @@ const LAYERS: LayerSpec[] = [
       }
       ctx.beginPath()
       ctx.arc(w - 78, 70, 28, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(255, 253, 249, 0.8)'
+      ctx.fillStyle = 'rgba(255, 253, 248, 0.85)'
       ctx.fill()
       ctx.restore()
-      rr(ctx, 18, h - 44, 74, 26, 13)
-      ctx.fillStyle = 'rgba(255, 253, 249, 0.85)'
+      rr(ctx, 1, 1, w - 2, h - 2, 22)
+      ctx.strokeStyle = 'rgba(168, 132, 63, 0.4)'
+      ctx.lineWidth = 2
+      ctx.stroke()
+      rr(ctx, 18, h - 46, 80, 28, 14)
+      ctx.fillStyle = 'rgba(255, 253, 248, 0.92)'
       ctx.fill()
-      text(ctx, 'IMAGE', 55, h - 26, `600 11px ${SANS}`, MUTED, 'center', 2)
+      text(ctx, 'IMAGE', 58, h - 27, `700 12px ${SANS}`, MUTED, 'center', 2)
     },
   },
   ...CARD_TOPICS.map<LayerSpec>((topic, i) => ({
@@ -211,20 +221,18 @@ const LAYERS: LayerSpec[] = [
     x: 64 + i * 392,
     y: 452,
     w: 368,
-    h: 178,
-    hoverDepth: 0.02 + i * 0.008,
-    openDepth: 0.12 + i * 0.06,
-    spread: [(i - 1) * 0.06, -0.015],
+    h: 180,
+    tier: 2,
     shadow: true,
-    draw: (ctx, w, h) => {
-      card(ctx, w, h)
+    draw: (ctx, w) => {
+      card(ctx, w, 180)
       ctx.beginPath()
       ctx.arc(46, 48, 22, 0, Math.PI * 2)
-      ctx.fillStyle = i === 1 ? 'rgba(127, 108, 179, 0.16)' : 'rgba(176, 144, 79, 0.16)'
+      ctx.fillStyle = i === 1 ? 'rgba(95, 77, 153, 0.14)' : 'rgba(168, 132, 63, 0.16)'
       ctx.fill()
       text(ctx, topic.icon, 46, 56, `400 20px ${SANS}`, i === 1 ? LAVENDER : GOLD, 'center')
-      text(ctx, topic.title, 28, 104, `400 28px ${SERIF}`, INK)
-      lines(ctx, 28, 124, [w - 80, w - 130])
+      text(ctx, topic.title, 28, 106, `500 32px ${SERIF}`, INK)
+      lines(ctx, 28, 128, [w - 84, w - 136])
     },
   })),
   {
@@ -233,28 +241,28 @@ const LAYERS: LayerSpec[] = [
     y: 664,
     w: 1280,
     h: 90,
-    hoverDepth: 0.015,
-    openDepth: 0.08,
-    spread: [0, -0.05],
+    tier: 1,
     shadow: true,
     draw: (ctx, w, h) => {
-      ctx.fillStyle = '#efe7dc'
+      ctx.fillStyle = '#ece3d6'
       ctx.fillRect(0, 0, w, h)
-      text(ctx, 'Prototype', 64, 52, `italic 400 22px ${SERIF}`, INK)
+      ctx.fillStyle = 'rgba(168, 132, 63, 0.35)'
+      ctx.fillRect(0, 0, w, 1.5)
+      text(ctx, 'Prototype', 64, 53, `italic 500 24px ${SERIF}`, INK)
       ;[0, 1, 2].forEach((c) => lines(ctx, 520 + c * 220, 34, [120, 84], 18))
-      text(ctx, 'Demo layout', w - 64, 52, `500 12px ${SANS}`, MUTED, 'right', 2)
+      text(ctx, 'DEMO LAYOUT', w - 64, 52, `700 12px ${SANS}`, MUTED, 'right', 2)
     },
   },
 ]
 
 function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number) {
   const g = ctx.createLinearGradient(0, 0, 0, h)
-  g.addColorStop(0, '#fbf8f2')
-  g.addColorStop(1, '#f5efe6')
+  g.addColorStop(0, '#f8f3ea')
+  g.addColorStop(1, '#f1e9dd')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, w, h)
-  // 레이어가 떠나간 자리에 남는 옅은 그리드 — 펼쳤을 때 '구조'가 보이도록
-  ctx.strokeStyle = 'rgba(127, 108, 179, 0.1)'
+  // 레이어가 떠난 자리에 남는 옅은 그리드와 자리 표시 — 펼쳤을 때 '구조'가 보이도록
+  ctx.strokeStyle = 'rgba(95, 77, 153, 0.07)'
   ctx.lineWidth = 1
   for (let x = 64; x < w; x += 96) {
     ctx.beginPath()
@@ -263,7 +271,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number) {
     ctx.stroke()
   }
   ctx.setLineDash([6, 6])
-  ctx.strokeStyle = 'rgba(176, 144, 79, 0.28)'
+  ctx.strokeStyle = 'rgba(168, 132, 63, 0.3)'
   for (const l of LAYERS) {
     ctx.beginPath()
     ctx.roundRect(l.x + 2, l.y + 2, l.w - 4, l.h - 4, 12)
@@ -272,15 +280,23 @@ function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.setLineDash([])
 }
 
+/** 멀리서 비스듬히 보는 화면이므로 텍스처 이방성 필터를 높여 글자를 선명하게 */
+function sharpen(tex: THREE.CanvasTexture) {
+  tex.anisotropy = 8
+  tex.minFilter = THREE.LinearMipmapLinearFilter
+  return tex
+}
+
 export function createWebPrototypePage(): PageContent {
-  const background = canvasTexture(PAGE_PX.width, PAGE_PX.height, 1.5, drawBackground)
+  const background = sharpen(canvasTexture(PAGE_PX.width, PAGE_PX.height, 1.5, drawBackground))
   const layers: PageLayer[] = LAYERS.map(({ draw, ...spec }) => ({
     ...spec,
-    texture: canvasTexture(spec.w, spec.h, 2, draw),
+    texture: sharpen(canvasTexture(spec.w, spec.h, 2, draw)),
   }))
   return {
     background,
     layers,
+    maxTier: Math.max(...layers.map((l) => l.tier)),
     dispose: () => {
       background.dispose()
       layers.forEach((l) => l.texture.dispose())
