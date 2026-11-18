@@ -1,0 +1,20 @@
+/* 미리보기 전용 — 앱 전역 스타일과 무관 */
+html,
+body {
+  margin: 0;
+  background: #ece6de;
+  overflow-x: hidden;
+}
+.preview-log {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 50;
+  max-width: 300px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(30, 24, 36, 0.78);
+  color: #f3ebdd;
+  font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+}

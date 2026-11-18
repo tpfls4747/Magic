@@ -96,7 +96,7 @@
 }
 
 /* 좁은 화면: 메뉴 버튼 + 펼침 목록 (작품 4개 + 소개 공간 항목이 한 줄에 여유 있게 들어가지 않는 폭부터) */
-@media (max-width: 1180px) {
+@media (max-width: 1240px) {
   .works-nav__toggle {
     display: inline-flex;
     align-items: center;

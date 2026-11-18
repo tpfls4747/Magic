@@ -182,6 +182,22 @@
   }
 }
 
+/* 아주 좁은 화면(360~420): 메뉴 세 개와 버튼이 한 줄에 들어가도록 간격만 줄임 */
+@media (max-width: 420px) {
+  .space-bar__nav ul {
+    gap: 2px;
+  }
+  .space-bar__link {
+    padding: 12px 6px;
+    letter-spacing: 0.06em;
+  }
+  .space-bar__back {
+    gap: 6px;
+    padding: 10px 10px;
+    letter-spacing: 0.06em;
+  }
+}
+
 @media (hover: none), (pointer: coarse) {
   .space-bar__link,
   .space-bar__back {

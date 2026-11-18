@@ -1,0 +1,470 @@
+/* Contact · Open the Next Door — 모든 선택자는 .cn-contact 범위 (전역 스타일 미사용) */
+.cn-contact {
+  --cn-ivory: #fbf7ef;
+  --cn-cream: #f3ebdd;
+  --cn-ink: #3a3140;
+  --cn-ink-soft: rgba(58, 49, 64, 0.74);
+  --cn-ink-faint: rgba(58, 49, 64, 0.5);
+  --cn-gold: #c9a061;
+  --cn-gold-deep: #8f6d3b;
+  --cn-lavender: #cdbff0;
+  --cn-lavender-ink: #6f5aa8;
+  --cn-serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  --cn-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #ece6de;
+  color: var(--cn-ink);
+  font-family: var(--cn-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cn-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.cn-contact.is-ready .cn-canvas {
+  opacity: 1;
+}
+
+.cn-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── 닫힌 상태: 헤드라인 ─────────────────────── */
+.cn-intro {
+  position: absolute;
+  top: max(5.5svh, 28px);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: min(880px, calc(100% - 32px));
+  text-align: center;
+  pointer-events: none;
+}
+/* 헤드라인 뒤의 옅은 아이보리 안개 — 벽 장식과 겹쳐도 또렷하게 */
+.cn-intro::before {
+  content: '';
+  position: absolute;
+  inset: -24px -60px -18px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(250, 246, 238, 0.85), rgba(250, 246, 238, 0));
+}
+.cn-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 14px;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--cn-gold-deep);
+}
+.cn-eyebrow::before,
+.cn-eyebrow::after {
+  content: '';
+  width: 36px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cn-gold));
+}
+.cn-eyebrow::after {
+  transform: scaleX(-1);
+}
+.cn-headline {
+  margin: 0;
+  font-family: var(--cn-serif);
+  font-weight: 300;
+  font-size: clamp(38px, 5.2vw, 78px);
+  line-height: 1.02;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+.cn-headline span,
+.cn-headline em {
+  display: block;
+}
+.cn-headline em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--cn-gold-deep);
+}
+.cn-subtitle {
+  margin: 16px auto 0;
+  max-width: 34em;
+  font-size: clamp(14px, 1.25vw, 16px);
+  line-height: 1.7;
+  color: var(--cn-ink-soft);
+}
+
+/* ── CTA ─────────────────────────────────────── */
+.cn-cta-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  bottom: max(4.5svh, 20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(360px, calc(100% - 32px));
+}
+.cn-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 34px;
+  border: 1px solid rgba(201, 160, 97, 0.7);
+  border-radius: 999px;
+  background: var(--cn-ink);
+  color: var(--cn-ivory);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 10px 30px rgba(58, 49, 64, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.3s ease;
+}
+.cn-cta:hover {
+  transform: translateY(-2px);
+  background: #44394b;
+  box-shadow:
+    0 14px 36px rgba(58, 49, 64, 0.26),
+    0 0 0 4px rgba(220, 192, 142, 0.25);
+}
+.cn-cta:focus-visible,
+.cn-quick:focus-visible,
+.cn-btn:focus-visible,
+.cn-close:focus-visible,
+.cn-back:focus-visible {
+  outline: 2px solid var(--cn-lavender-ink);
+  outline-offset: 3px;
+}
+.cn-cta:disabled {
+  cursor: default;
+}
+/* 작은 아치 문 아이콘 */
+.cn-cta__glyph {
+  width: 12px;
+  height: 16px;
+  border: 1.5px solid #e2c48e;
+  border-bottom-width: 1.5px;
+  border-radius: 6px 6px 1px 1px;
+  position: relative;
+}
+.cn-cta__glyph::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 8px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #e2c48e;
+}
+.cn-quick {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--cn-ink-soft);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 160, 97, 0.7);
+  text-underline-offset: 5px;
+  cursor: pointer;
+}
+.cn-quick:hover {
+  color: var(--cn-ink);
+}
+
+/* ── 열린 뒤: 연락처 패널 ─────────────────────── */
+.cn-panel-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding-left: max(6vw, 24px);
+  padding-right: 16px;
+  pointer-events: none;
+}
+.cn-panel {
+  position: relative;
+  pointer-events: auto;
+  width: min(460px, 42vw);
+  padding: 44px 40px 30px;
+  background: rgba(251, 247, 239, 0.9);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+  border: 1px solid rgba(201, 160, 97, 0.45);
+  border-radius: 3px;
+  box-shadow:
+    0 30px 80px rgba(80, 62, 110, 0.18),
+    0 2px 0 rgba(255, 255, 255, 0.7) inset;
+}
+/* 안쪽 금 헤어라인 액자 */
+.cn-panel::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(201, 160, 97, 0.22);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.cn-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cn-ink-soft);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.cn-close:hover {
+  background: rgba(58, 49, 64, 0.06);
+  color: var(--cn-ink);
+}
+.cn-close span {
+  font-size: 16px;
+  line-height: 0;
+  margin-right: 2px;
+}
+.cn-panel__eyebrow {
+  margin: 0 0 12px;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--cn-gold-deep);
+}
+.cn-panel__title {
+  margin: 0;
+  font-family: var(--cn-serif);
+  font-weight: 400;
+  font-size: clamp(32px, 3.2vw, 48px);
+  line-height: 1.04;
+  text-wrap: balance;
+  outline: none;
+}
+.cn-panel__body {
+  margin: 14px 0 22px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--cn-ink-soft);
+}
+.cn-methods {
+  margin: 0 0 22px;
+  display: grid;
+  gap: 0;
+  border-top: 1px solid rgba(201, 160, 97, 0.35);
+}
+.cn-method {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(201, 160, 97, 0.35);
+}
+.cn-method dt {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cn-gold-deep);
+}
+.cn-method dd {
+  margin: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.cn-method dd.is-pending {
+  font-family: var(--cn-serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--cn-ink-faint);
+}
+.cn-actions {
+  display: grid;
+  gap: 10px;
+}
+.cn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.cn-btn--primary {
+  border: 1px solid var(--cn-ink);
+  background: var(--cn-ink);
+  color: var(--cn-ivory);
+}
+.cn-btn--secondary {
+  border: 1px solid rgba(143, 109, 59, 0.6);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--cn-ink);
+}
+.cn-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(58, 49, 64, 0.16);
+}
+.cn-btn.is-pending {
+  cursor: not-allowed;
+  opacity: 0.62;
+  border-style: dashed;
+}
+.cn-btn--primary.is-pending {
+  background: rgba(58, 49, 64, 0.82);
+}
+.cn-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(220, 192, 142, 0.3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: inherit;
+}
+.cn-btn__arrow {
+  font-size: 13px;
+}
+.cn-hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--cn-ink-faint);
+  text-align: center;
+}
+.cn-panel__foot {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(201, 160, 97, 0.25);
+  display: flex;
+  justify-content: center;
+}
+.cn-back {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--cn-lavender-ink);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.cn-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ── 세로 화면 (모바일) ───────────────────────── */
+@media (max-aspect-ratio: 9/10) {
+  .cn-intro {
+    top: max(4.5svh, 20px, env(safe-area-inset-top));
+  }
+  .cn-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    gap: 10px;
+  }
+  .cn-eyebrow::before,
+  .cn-eyebrow::after {
+    width: 18px;
+  }
+  .cn-headline {
+    font-size: clamp(32px, 9.4vw, 52px);
+  }
+  .cn-subtitle {
+    margin-top: 10px;
+    font-size: 14px;
+    max-width: 22em;
+  }
+  .cn-cta {
+    width: 100%;
+  }
+  .cn-panel-wrap {
+    align-items: flex-end;
+    padding: 0 max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom));
+  }
+  .cn-panel {
+    width: 100%;
+    max-height: 58svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 30px 22px 16px;
+  }
+  .cn-panel__title {
+    font-size: clamp(28px, 8vw, 38px);
+    padding-right: 24px;
+  }
+  .cn-panel__body {
+    margin: 10px 0 16px;
+    font-size: 14px;
+  }
+  .cn-methods {
+    margin-bottom: 16px;
+  }
+  .cn-method {
+    grid-template-columns: 76px minmax(0, 1fr);
+    padding: 9px 0;
+  }
+  .cn-close {
+    top: 8px;
+    right: 8px;
+  }
+  .cn-panel__foot {
+    margin-top: 10px;
+    padding-top: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-canvas,
+  .cn-cta,
+  .cn-btn {
+    transition: none;
+  }
+}

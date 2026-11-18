@@ -13,6 +13,7 @@ import { SpaceVeil, type VeilState } from '@/sections/SpaceVeil'
 // 전시관 밖 공간(About 책상 · Process 보드)은 처음 방문할 때 불러옵니다
 const DesignersDesk = lazy(() => import('@/sections/DesignersDesk'))
 const ProcessBoard = lazy(() => import('@/sections/ProcessBoard'))
+const ContactDoor = lazy(() => import('@/sections/ContactDoor'))
 
 /**
  * 첫 화면 흐름
@@ -42,6 +43,9 @@ function focusSpace(space: Space) {
   else if (space === 'process') {
     // Process 섹션에는 초점을 받을 요소가 없어 제목을 프로그램 초점 대상으로 지정
     target = document.getElementById(`${SPACE_HASH.process.slice(1)}-title`)
+    target?.setAttribute('tabindex', '-1')
+  } else if (space === 'contact') {
+    target = document.getElementById(SPACE_HASH.contact.slice(1))
     target?.setAttribute('tabindex', '-1')
   } else target = document.querySelector<HTMLElement>('[data-tour="hero-title"] h1')
   target?.focus({ preventScroll: true })
@@ -220,6 +224,7 @@ function App() {
   const handleGalleryReady = useCallback(() => setReadyFor('gallery'), [])
   const handleDeskReady = useCallback(() => setReadyFor('desk'), [])
   const handleProcessReady = useCallback(() => setReadyFor('process'), [])
+  const handleContactReady = useCallback(() => setReadyFor('contact'), [])
   const handleBack = useCallback(() => requestSpace('gallery'), [requestSpace])
 
   // 빛이나 막 아래에서 준비되는 동안에는 페이드 없이 바로 그림 (준비가 늦어 먼저 걷히면 평소처럼 서서히)
@@ -241,6 +246,7 @@ function App() {
             <Suspense fallback={<div style={{ minHeight: '100vh', background: '#ece2d6' }} />}>
               {space === 'desk' && <DesignersDesk onReady={handleDeskReady} onBack={handleBack} />}
               {space === 'process' && <ProcessBoard onReady={handleProcessReady} onBack={handleBack} />}
+              {space === 'contact' && <ContactDoor onReady={handleContactReady} onBack={handleBack} />}
             </Suspense>
           )}
         </main>
