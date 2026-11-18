@@ -45,8 +45,8 @@ const SANS = 'system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif'
 const SERIF = '"Cormorant Garamond", "Times New Roman", serif'
 /** 본문·제목 — 대비 약 15:1 */
 const INK = '#241e2a'
-/** 보조 텍스트 — 대비 약 7:1 (이전 #8a8090 은 약 3.6:1) */
-const MUTED = '#5a5062'
+/** 내비게이션·작은 설명 텍스트 — 멀리서 작게 보이므로 진하게, 대비 약 10.6:1 (처음 #8a8090 은 약 3.6:1) */
+const SUBTLE_INK = '#40374a'
 /** 라벤더 강조 — 대비 약 6.6:1 (이전 #7f6cb3 은 약 4.2:1) */
 const LAVENDER = '#5f4d99'
 /** 큰 글자용 골드 — 대비 약 4.7:1 */
@@ -80,7 +80,7 @@ function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: n
 
 /** 막대로 표현한 본문 자리 (실제 문구 대신) */
 function lines(ctx: CanvasRenderingContext2D, x: number, y: number, widths: number[], gap = 16) {
-  ctx.fillStyle = 'rgba(36, 30, 42, 0.2)'
+  ctx.fillStyle = 'rgba(36, 30, 42, 0.3)'
   widths.forEach((w, i) => {
     rr(ctx, x, y + i * gap, w, 8, 4)
     ctx.fill()
@@ -128,7 +128,7 @@ const LAYERS: LayerSpec[] = [
       text(ctx, '◆', 56, 44, `400 18px ${SANS}`, GOLD)
       text(ctx, 'Prototype', 82, 45, `italic 500 28px ${SERIF}`, INK)
       ;['Work', 'Studio', 'Journal', 'Contact'].forEach((label, i) =>
-        text(ctx, label, 610 + i * 116, 43, `600 16px ${SANS}`, MUTED, 'left', 0.5),
+        text(ctx, label, 606 + i * 116, 44, `600 18px ${SANS}`, SUBTLE_INK, 'left', 0.5),
       )
       rr(ctx, w - 184, 15, 128, 38, 19)
       ctx.fillStyle = INK
@@ -148,7 +148,7 @@ const LAYERS: LayerSpec[] = [
       text(ctx, 'A LIVING INTERFACE', 2, 22, `700 14px ${SANS}`, LAVENDER, 'left', 4)
       text(ctx, 'Design that', 0, 100, `500 74px ${SERIF}`, INK)
       text(ctx, 'breathes.', 0, 172, `italic 500 74px ${SERIF}`, GOLD_TEXT)
-      text(ctx, '재사용 가능한 컴포넌트로 구성한 랜딩 페이지 프로토타입', 2, 224, `500 19px ${SANS}`, MUTED)
+      text(ctx, '재사용 가능한 컴포넌트로 구성한 랜딩 페이지 프로토타입', 2, 226, `600 20px ${SANS}`, SUBTLE_INK)
     },
   },
   {
@@ -213,7 +213,7 @@ const LAYERS: LayerSpec[] = [
       rr(ctx, 18, h - 46, 80, 28, 14)
       ctx.fillStyle = 'rgba(255, 253, 248, 0.92)'
       ctx.fill()
-      text(ctx, 'IMAGE', 58, h - 27, `700 12px ${SANS}`, MUTED, 'center', 2)
+      text(ctx, 'IMAGE', 58, h - 27, `700 12px ${SANS}`, SUBTLE_INK, 'center', 2)
     },
   },
   ...CARD_TOPICS.map<LayerSpec>((topic, i) => ({
@@ -231,7 +231,7 @@ const LAYERS: LayerSpec[] = [
       ctx.fillStyle = i === 1 ? 'rgba(95, 77, 153, 0.14)' : 'rgba(168, 132, 63, 0.16)'
       ctx.fill()
       text(ctx, topic.icon, 46, 56, `400 20px ${SANS}`, i === 1 ? LAVENDER : GOLD, 'center')
-      text(ctx, topic.title, 28, 106, `500 32px ${SERIF}`, INK)
+      text(ctx, topic.title, 28, 108, `600 35px ${SERIF}`, INK)
       lines(ctx, 28, 128, [w - 84, w - 136])
     },
   })),
@@ -250,7 +250,7 @@ const LAYERS: LayerSpec[] = [
       ctx.fillRect(0, 0, w, 1.5)
       text(ctx, 'Prototype', 64, 53, `italic 500 24px ${SERIF}`, INK)
       ;[0, 1, 2].forEach((c) => lines(ctx, 520 + c * 220, 34, [120, 84], 18))
-      text(ctx, 'DEMO LAYOUT', w - 64, 52, `700 12px ${SANS}`, MUTED, 'right', 2)
+      text(ctx, 'DEMO LAYOUT', w - 64, 52, `700 13px ${SANS}`, SUBTLE_INK, 'right', 2)
     },
   },
 ]

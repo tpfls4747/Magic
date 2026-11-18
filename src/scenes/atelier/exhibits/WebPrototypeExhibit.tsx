@@ -61,6 +61,13 @@ function maxDepthFor(turn: number) {
 }
 const DESKTOP_MAX_DEPTH = maxDepthFor(OPEN_TURN.landscape) // ≈ 0.18 m
 
+/**
+ * 시점 보정 — 비스듬한 근접 카메라에서는 깊이 d 인 레이어가 d·tan(θ) 만큼 왼쪽으로 밀려 보입니다.
+ * Z 거리는 그대로 두고, 펼쳐진 만큼 레이어를 오른쪽으로 되돌려 원래 X 정렬에 가깝게 보이게 합니다.
+ * 1 이면 카메라에서 완전히 겹쳐 보여 깊이감이 사라지므로, 약간의 비켜남은 남깁니다.
+ */
+const PARALLAX_COMPENSATION = 0.75
+
 /** hover 깊이 — 브라우저 전체가 앞으로 나오는 양, 계층별 아주 작은 분리, 포인터 아래 레이어의 추가 상승 */
 const HOVER_BROWSER = 0.012
 const HOVER_PER_TIER = 0.0018
@@ -135,7 +142,12 @@ export function WebPrototypeExhibit({
   const portrait = useThree((s) => s.size.width < s.size.height)
   const motion = useMemo(() => {
     const turn = portrait ? OPEN_TURN.portrait : OPEN_TURN.landscape
-    return { turn, maxDepth: Math.min(maxDepthFor(turn), DESKTOP_MAX_DEPTH) }
+    return {
+      turn,
+      maxDepth: Math.min(maxDepthFor(turn), DESKTOP_MAX_DEPTH),
+      /** 깊이 1m 당 X 보정량 */
+      shiftPerDepth: Math.tan(VIEW_ANGLE - turn) * PARALLAX_COMPENSATION,
+    }
   }, [portrait])
 
   const page = useMemo(() => createWebPrototypePage(), [])
@@ -223,7 +235,7 @@ export function WebPrototypeExhibit({
     else openedAt.current = null
     const settle = !animate ? 0 : openedAt.current === null ? 1 : Math.exp(-(t - openedAt.current) * SETTLE_RATE)
 
-    const { maxDepth, turn } = motion
+    const { maxDepth, turn, shiftPerDepth } = motion
     const tierGap = maxDepth / page.maxTier
     const hoverEase = animate ? 1 - Math.exp(-dt * 8) : 1
 
@@ -248,7 +260,9 @@ export function WebPrototypeExhibit({
       const opened = l.tier * tierGap * oi
       const hoverLift = (l.tier * HOVER_PER_TIER * h + HOVER_TARGET * lh) * (1 - oi)
       const lift = opened + hoverLift + floatZ
-      mesh.position.set(bx, by + floatY, 0.0008 + i * 0.0002 + lift)
+      // X 는 원래 위치 + 펼친 깊이에 비례한 시점 보정 (회전 진행에 맞춰 함께 적용)
+      const compensate = opened * shiftPerDepth * easeInOutCubic(clamp01(o / TURN_END))
+      mesh.position.set(bx + compensate, by + floatY, 0.0008 + i * 0.0002 + lift)
 
       const outline = outlineRefs.current[i]
       if (outline) {
@@ -261,7 +275,7 @@ export function WebPrototypeExhibit({
       if (shadow) {
         // 그림자는 화면 위에 남고, 왼쪽 위 빛을 기준으로 오른쪽 아래로 조금 비켜 퍼집니다
         const k = clamp01(lift / maxDepth)
-        shadow.position.set(bx + 0.003 + k * 0.008, by - 0.004 - k * 0.012, 0.0005)
+        shadow.position.set(bx + compensate * 0.5 + 0.003 + k * 0.008, by - 0.004 - k * 0.012, 0.0005)
         shadow.scale.setScalar(1 + k * 0.12)
         const a = SHADOW_STRENGTH * clamp01(lift / 0.02) * (1 - k * 0.5)
         asMaterial(shadow).opacity = a
