@@ -1,0 +1,72 @@
+.space-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 46%, #fffaf1 0%, #f6eee2 42%, #e8def0 100%);
+  opacity: 0;
+  pointer-events: auto;
+  animation: space-veil-in var(--veil-in, 0.55s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.space-veil.is-covered {
+  opacity: 1;
+  animation: none;
+}
+
+.space-veil.is-out {
+  opacity: 1;
+  pointer-events: none;
+  animation: space-veil-out var(--veil-out, 0.75s) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.space-veil__label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+  opacity: 0;
+  animation: space-veil-label 0.6s ease 0.15s forwards;
+}
+
+.space-veil__star {
+  font-style: normal;
+  font-size: 0.6em;
+  color: var(--color-gold-deep);
+}
+
+@keyframes space-veil-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes space-veil-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes space-veil-label {
+  to {
+    opacity: 0.9;
+  }
+}
+
+/* 동작 줄이기: 짧은 페이드만 */
+@media (prefers-reduced-motion: reduce) {
+  .space-veil {
+    --veil-in: 0.18s;
+    --veil-out: 0.25s;
+  }
+  .space-veil__label {
+    animation-duration: 0.01s;
+    animation-delay: 0s;
+  }
+}

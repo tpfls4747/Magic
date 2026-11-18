@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { Project } from '@/data/projects'
+import { goToSpace } from '@/lib/space'
 import { GALLERY_STOP, goToStop, TOUR_PROJECTS, useActiveStop } from '@/lib/tour'
 import './WorksNav.css'
 
@@ -25,7 +26,9 @@ export function WorksNav() {
     ...projects.map((p, i) => ({ stop: i + 1, label: p.title, no: number(p) })),
   ]
 
-  const buttons = () => Array.from(listRef.current?.querySelectorAll('button') ?? [])
+  // 화면에 보이는 항목만 (숨겨진 구분선 등은 건너뜀)
+  const buttons = () =>
+    Array.from(listRef.current?.querySelectorAll('button') ?? []).filter((b) => b.offsetParent !== null)
 
   // 메뉴 밖을 누르면 닫기
   useEffect(() => {
@@ -96,6 +99,23 @@ export function WorksNav() {
             </button>
           </li>
         ))}
+        {/* 작품과 구분되는 소개 공간 — The Designer's Desk */}
+        <li className="works-nav__about">
+          <button
+            type="button"
+            className="works-nav__item works-nav__item--about"
+            onClick={() => {
+              setOpen(false)
+              goToSpace('desk')
+            }}
+          >
+            <span className="works-nav__star" aria-hidden="true">
+              ✦
+            </span>
+            About
+            <span className="works-nav__sub">The Designer’s Desk</span>
+          </button>
+        </li>
       </ul>
     </nav>
   )

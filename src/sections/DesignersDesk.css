@@ -1,0 +1,161 @@
+/* The Designer's Desk 공간의 바깥 틀 — About 모듈 내부 스타일(.ab-*)은 건드리지 않습니다 */
+.desk-space {
+  position: relative;
+  min-height: 100vh;
+  background: #ece2d6;
+}
+
+.desk-space__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(14px, 2.4vw, 30px) clamp(16px, 4vw, 56px);
+  padding-left: max(clamp(16px, 4vw, 56px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(16px, 4vw, 56px), env(safe-area-inset-right, 0px));
+  color: var(--color-ink);
+  pointer-events: none;
+}
+
+/* 전시관 상단 바와 같은 옅은 아이보리 그라데이션 */
+.desk-space__bar::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -28px;
+  background: linear-gradient(180deg, rgba(246, 240, 231, 0.72) 0%, rgba(246, 240, 231, 0) 100%);
+}
+
+.desk-space__mark {
+  white-space: nowrap;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+/* 지금 있는 공간 표시 */
+.desk-space__where {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto 0 0;
+  padding-left: 18px;
+  border-left: 1px solid rgba(168, 135, 79, 0.4);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--color-lavender-ink);
+  white-space: nowrap;
+}
+
+.desk-space__where-dot {
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: var(--color-gold-deep);
+}
+
+.desk-space__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border: 1px solid rgba(168, 135, 79, 0.55);
+  border-radius: 999px;
+  background: rgba(250, 246, 238, 0.82);
+  color: var(--color-ink);
+  font: 500 11px/1 var(--font-sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.desk-space__back:hover {
+  background: rgba(255, 252, 245, 0.96);
+  border-color: var(--color-gold-deep);
+}
+
+.desk-space__back:focus-visible {
+  outline: 2px solid var(--color-gold-deep);
+  outline-offset: 3px;
+}
+
+/* 상단 바 아래로 책상 소개 글을 내림 (원본 위치 + 바 높이) */
+.desk-space .ab-root .ab-intro {
+  top: calc(clamp(32px, 7vh, 88px) + 44px);
+}
+
+.desk-space .ab-root.is-narrow .ab-intro {
+  top: calc(28px + 52px);
+}
+
+@media (max-width: 1023px) {
+  .desk-space__where {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .desk-space__mark {
+    font-size: 13px;
+    letter-spacing: 0.24em;
+  }
+  .desk-space__back {
+    padding: 10px 14px;
+    letter-spacing: 0.14em;
+  }
+}
+
+/* 아주 좁은 화면(375 등): 이름과 버튼이 한 줄에 들어가도록 글자 간격만 줄임 */
+@media (max-width: 400px) {
+  .desk-space__bar {
+    gap: 10px;
+  }
+  .desk-space__mark {
+    letter-spacing: 0.16em;
+  }
+  .desk-space__back {
+    gap: 8px;
+    padding: 10px 12px;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .desk-space__back {
+    min-height: 44px;
+  }
+}
+
+/* 다이어리를 펼친 동안에는 펼침면을 가리지 않도록 이름·위치 표시를 숨기고 'Back to Gallery' 만 남김 */
+.desk-space__mark,
+.desk-space__where,
+.desk-space__bar::before {
+  transition: opacity 0.5s ease;
+}
+
+.desk-space:has(.ab-root.is-open) .desk-space__mark,
+.desk-space:has(.ab-root.is-open) .desk-space__where,
+.desk-space:has(.ab-root.is-open) .desk-space__bar::before {
+  opacity: 0;
+}
+
+@media (max-width: 340px) {
+  .desk-space__mark {
+    display: none;
+  }
+}
