@@ -1,0 +1,15 @@
+/* The Process Board 공간의 바깥 틀 — Process 모듈 내부 스타일(.pr-*)은 건드리지 않습니다 */
+.process-space {
+  position: relative;
+  min-height: 100vh;
+  background: #ebe2d6;
+}
+
+/* 상단 바 아래로 소개 글을 내림 (원본 위치 + 바 높이) — 넓은 화면은 세로 가운데 배치라 그대로 */
+.process-space .pr-root:not(.is-narrow):not(.is-wide) .pr-intro {
+  top: calc(clamp(24px, 5vh, 60px) + 64px);
+}
+
+.process-space .pr-root.is-narrow .pr-intro {
+  padding-top: calc(36px + 56px);
+}

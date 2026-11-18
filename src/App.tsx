@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { markIntroSeen, shouldPlayIntro } from '@/lib/introSession'
-import { DESK_HASH, registerSpaceNavigator, spaceFromLocation, type Space } from '@/lib/space'
+import { registerSpaceNavigator, SPACE_HASH, spaceFromLocation, type Space } from '@/lib/space'
 import { GALLERY_STOP, setActiveStop, setHoveredProject } from '@/lib/tour'
 import { canUseWebGL } from '@/lib/webgl'
 import { AtelierCanvas } from '@/scenes/AtelierCanvas'
@@ -10,8 +10,9 @@ import { OpeningIntro } from '@/sections/OpeningIntro'
 import { ScrollTour } from '@/sections/ScrollTour'
 import { SpaceVeil, type VeilState } from '@/sections/SpaceVeil'
 
-// 책상 공간(About 모듈 + 3D 책상)은 처음 방문할 때 불러옵니다
+// 전시관 밖 공간(About 책상 · Process 보드)은 처음 방문할 때 불러옵니다
 const DesignersDesk = lazy(() => import('@/sections/DesignersDesk'))
+const ProcessBoard = lazy(() => import('@/sections/ProcessBoard'))
 
 /**
  * 첫 화면 흐름
@@ -36,10 +37,13 @@ const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: r
 
 /** 공간마다 초점을 둘 제목 (스크린 리더가 새 화면을 읽기 시작하는 지점) */
 function focusSpace(space: Space) {
-  const target =
-    space === 'desk'
-      ? document.getElementById(DESK_HASH.slice(1))
-      : document.querySelector<HTMLElement>('[data-tour="hero-title"] h1')
+  let target: HTMLElement | null
+  if (space === 'desk') target = document.getElementById(SPACE_HASH.desk.slice(1))
+  else if (space === 'process') {
+    // Process 섹션에는 초점을 받을 요소가 없어 제목을 프로그램 초점 대상으로 지정
+    target = document.getElementById(`${SPACE_HASH.process.slice(1)}-title`)
+    target?.setAttribute('tabindex', '-1')
+  } else target = document.querySelector<HTMLElement>('[data-tour="hero-title"] h1')
   target?.focus({ preventScroll: true })
 }
 
@@ -167,12 +171,16 @@ function App() {
   const requestSpace = useCallback(
     (target: Space) => {
       if (stageRef.current !== 'gallery' || veilRef.current !== 'hidden') return
-      const onDesk = window.location.hash === DESK_HASH
-      if (target === 'desk') {
-        if (!onDesk) window.history.pushState({ space: 'desk' }, '', DESK_HASH)
-      } else if (onDesk) {
+      const here = spaceFromLocation()
+      if (target === here) return
+      if (target !== 'gallery') {
+        // 전시관 → 공간: 기록을 하나 쌓음 / 공간 → 공간: 바꿔치기 (뒤로 가기는 항상 전시관으로)
+        const state = { space: target, fromGallery: here === 'gallery' || window.history.state?.fromGallery === true }
+        if (here === 'gallery') window.history.pushState(state, '', SPACE_HASH[target])
+        else window.history.replaceState(state, '', SPACE_HASH[target])
+      } else {
         // 전시관에서 들어왔다면 브라우저 기록을 되돌려(뒤로 가기와 같은 결과) popstate 에서 전환
-        if (window.history.state?.space === 'desk') {
+        if (window.history.state?.fromGallery) {
           window.history.back()
           return
         }
@@ -211,6 +219,7 @@ function App() {
 
   const handleGalleryReady = useCallback(() => setReadyFor('gallery'), [])
   const handleDeskReady = useCallback(() => setReadyFor('desk'), [])
+  const handleProcessReady = useCallback(() => setReadyFor('process'), [])
   const handleBack = useCallback(() => requestSpace('gallery'), [requestSpace])
 
   // 빛이나 막 아래에서 준비되는 동안에는 페이드 없이 바로 그림 (준비가 늦어 먼저 걷히면 평소처럼 서서히)
@@ -230,7 +239,8 @@ function App() {
             </>
           ) : (
             <Suspense fallback={<div style={{ minHeight: '100vh', background: '#ece2d6' }} />}>
-              <DesignersDesk onReady={handleDeskReady} onBack={handleBack} />
+              {space === 'desk' && <DesignersDesk onReady={handleDeskReady} onBack={handleBack} />}
+              {space === 'process' && <ProcessBoard onReady={handleProcessReady} onBack={handleBack} />}
             </Suspense>
           )}
         </main>

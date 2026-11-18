@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { Project } from '@/data/projects'
-import { goToSpace } from '@/lib/space'
+import { goToSpace, SPACE_LABEL, SPACE_NAV } from '@/lib/space'
 import { GALLERY_STOP, goToStop, TOUR_PROJECTS, useActiveStop } from '@/lib/tour'
 import './WorksNav.css'
 
@@ -99,23 +99,27 @@ export function WorksNav() {
             </button>
           </li>
         ))}
-        {/* 작품과 구분되는 소개 공간 — The Designer's Desk */}
-        <li className="works-nav__about">
-          <button
-            type="button"
-            className="works-nav__item works-nav__item--about"
-            onClick={() => {
-              setOpen(false)
-              goToSpace('desk')
-            }}
-          >
-            <span className="works-nav__star" aria-hidden="true">
-              ✦
-            </span>
-            About
-            <span className="works-nav__sub">The Designer’s Desk</span>
-          </button>
-        </li>
+        {/* 작품과 구분되는 소개 공간 — The Designer's Desk · The Process Board */}
+        {SPACE_NAV.map((item, i) => (
+          <li key={item.space} className={`works-nav__about${i === 0 ? ' works-nav__about--first' : ''}`}>
+            <button
+              type="button"
+              className={`works-nav__item works-nav__item--about works-nav__item--${item.space}`}
+              onClick={() => {
+                setOpen(false)
+                goToSpace(item.space)
+              }}
+            >
+              {i === 0 && (
+                <span className="works-nav__star" aria-hidden="true">
+                  ✦
+                </span>
+              )}
+              {item.label}
+              <span className="works-nav__sub">{SPACE_LABEL[item.space]}</span>
+            </button>
+          </li>
+        ))}
       </ul>
     </nav>
   )
