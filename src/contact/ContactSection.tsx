@@ -216,7 +216,8 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
       <div className="cn-canvas" aria-hidden="true">
         {webgl && (
         <Canvas
-          shadows={!lowQuality ? 'soft' : false}
+          // three r187 에서 PCFSoft 가 제거되어 어차피 PCF 로 대체됨 — 같은 결과를 직접 지정해 콘솔 경고 제거
+          shadows={!lowQuality ? 'percentage' : false}
           frameloop={visible ? 'always' : 'never'}
           dpr={lowQuality ? [1, 1.5] : [1, 2]}
           camera={{ fov: 35, near: 0.1, far: 80, position: [0, 2.4, 12] }}
