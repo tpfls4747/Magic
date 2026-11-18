@@ -120,6 +120,7 @@
 
 .case-button {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   gap: 12px;
   padding: 14px 22px;
@@ -233,16 +234,22 @@
   }
 }
 
-/* 높이가 낮은 가로 화면 */
+/* 높이가 낮은 가로 화면 (휴대폰 가로 등) — 상단 메뉴와 겹치지 않도록 핵심 정보만 */
 @media (max-height: 560px) and (min-aspect-ratio: 1/1) {
+  .exhibit-panel {
+    top: calc(50% + 24px);
+  }
   .exhibit-panel__card {
     gap: 8px;
   }
   .exhibit-panel__title {
-    font-size: 40px;
+    font-size: 34px;
   }
-  .exhibit-panel__summary {
-    font-size: 13px;
-    line-height: 1.5;
+  .exhibit-panel__summary,
+  .exhibit-panel__hint {
+    display: none;
+  }
+  .exhibit-panel__actions {
+    margin-top: 2px;
   }
 }

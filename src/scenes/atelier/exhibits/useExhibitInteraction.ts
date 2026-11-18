@@ -6,6 +6,7 @@ import {
   stopOfProject,
   TOUR_PROJECT_IDS,
   useActiveStop,
+  useActiveVisit,
   type TourProjectId,
 } from '@/lib/tour'
 
@@ -59,6 +60,17 @@ export function useExhibitInteraction(
   const hovered = focused && hovering && (!inTour || hoverAt === stop)
   /** 탭으로 켠 상태(일시) 또는 toggle 작품의 켜짐 상태 */
   const [on, setOn] = useState(false)
+  /**
+   * toggle 작품을 켠 방문 번호 — 작품을 떠났다 돌아오면 방문 번호가 바뀌어 꺼진 상태로 시작합니다.
+   * (직접 이동이나 스크롤로 떠나는 순간에도 펼친 레이어가 자연스럽게 조립됩니다)
+   */
+  const visit = useActiveVisit()
+  const [onVisit, setOnVisit] = useState<number | null>(null)
+  const toggleOn = inTour ? onVisit === visit : on
+  const flip = () => {
+    if (inTour) setOnVisit(toggleOn ? null : visit)
+    else setOn((v) => !v)
+  }
   const touchTimer = useRef<number | undefined>(undefined)
   const lastPointer = useRef<string>('mouse')
 
@@ -110,7 +122,7 @@ export function useExhibitInteraction(
         navigate()
       } else if (toggle) {
         e.stopPropagation()
-        setOn((v) => !v)
+        flip()
       }
     },
     onPointerUp: (e: ThreeEvent<PointerEvent>) => {
@@ -121,7 +133,7 @@ export function useExhibitInteraction(
         return
       }
       if (toggle) {
-        setOn((v) => !v)
+        flip()
         return
       }
       window.clearTimeout(touchTimer.current)
@@ -137,7 +149,7 @@ export function useExhibitInteraction(
     /** 작품 앞에서 마우스가 올라와 있음 */
     hovered,
     /** toggle 작품이 켜져 있음 */
-    toggled: focused && toggle && on,
+    toggled: focused && toggle && toggleOn,
     handlers,
   }
 }

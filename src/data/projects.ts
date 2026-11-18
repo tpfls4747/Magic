@@ -46,9 +46,11 @@ export const projects: Project[] = [
     id: 'web-prototype',
     index: 3,
     title: 'Web Prototype',
-    subtitle: '개인 웹 프로토타입',
-    summary: '',
-    tags: [],
+    subtitle: '인터랙티브 웹 프로토타입',
+    // 임시 소개 문구 — 실제 프로젝트 자료가 들어오면 교체합니다.
+    summary:
+      '사용자의 반응에 따라 움직이는 인터페이스와 다양한 웹 인터랙션을 실험한 프로토타입 프로젝트입니다.',
+    tags: ['Creative Development', 'Interactive Web', 'Prototyping'],
     object: 'browser',
   },
 ]

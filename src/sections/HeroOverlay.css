@@ -36,6 +36,7 @@
 }
 
 .hero-overlay__mark {
+  white-space: nowrap;
   font-family: var(--font-serif);
   font-size: 15px;
   letter-spacing: 0.32em;

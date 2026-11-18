@@ -44,12 +44,13 @@
 
 ### 스크롤 투어 — 작품 근접 화면
 
-아래로 스크롤하면 카메라가 전시관 전체 → Seat Swap → Sign-up Redesign 순서로 이동하고, 각 작품 앞에서 프로젝트 소개가 나타납니다.
+아래로 스크롤하면 카메라가 전시관 전체 → Seat Swap → Sign-up Redesign → Web Prototype 순서로 이동하고, 각 작품 앞에서 프로젝트 소개가 나타납니다.
 
 | | 데스크톱 | 모바일 |
 |---|---|---|
 | Exhibit 01 | ![Seat Swap 데스크톱](docs/screenshots/step3-1-exhibit-desktop.jpg) | ![Seat Swap 모바일](docs/screenshots/step3-1-exhibit-mobile.jpg) |
 | Exhibit 02 | ![Sign-up 데스크톱](docs/screenshots/step4-1-signup-desktop.jpg) | ![Sign-up 모바일](docs/screenshots/step4-1-signup-mobile.jpg) |
+| Exhibit 03 | ![Web Prototype 데스크톱](docs/screenshots/step7-1-web-desktop.jpg) | ![Web Prototype 모바일](docs/screenshots/step7-1-web-mobile.jpg) |
 
 ### 작품 1 — Seat Swap (근접 촬영)
 
@@ -139,6 +140,7 @@ src/
 4. 비행 중에 스크롤을 시작하면 비행을 멈추고 그 자리에서 스크롤로 넘어갑니다
 
 - 3D 작품: 작품 앞이 아닐 때는 클릭/탭 = 이동, 작품 앞에서만 hover/탭 = 작품 애니메이션 (`useExhibitInteraction`)
+- Web Prototype: 작품 앞에서 hover = 가벼운 깊이감, 클릭/탭 = 레이어 펼치기·조립. 펼친 상태는 같은 방문 동안만 유지되고, 다른 작품으로 떠나면 조립된 상태로 돌아옵니다
 - 키보드: Works 메뉴는 Tab·화살표·Home/End·Enter, 좁은 화면 메뉴는 Esc 로 닫기, 작품 화면에서 Esc = 전시관으로. 이동 후 해당 화면 제목으로 포커스 이동
 - 새 작품 추가: `projects.ts` 데이터 + `TOUR_PROJECT_IDS` + `EXHIBIT_LAYOUT` 에 한 줄씩 — 메뉴·패널·카메라 구도·스크롤 구간이 자동으로 늘어납니다
 
@@ -154,6 +156,6 @@ src/
 - [x] STEP 4-1 — 스크롤 투어 확장 (전체 → Seat Swap → Sign-up Redesign)
 - [x] 자유 탐색 — 3D 작품 클릭, Works 메뉴, Back to Gallery, 키보드
 - [x] STEP 7 — 작품 3: Web Prototype (3D 브라우저, UI 레이어 확장 · 데모 화면, 스크롤 투어 연결 전)
-- [ ] Web Prototype 스크롤 투어·Works 메뉴 연결
+- [x] STEP 7-1 — Web Prototype 스크롤 투어·Works 메뉴·직접 이동 연결
 - [ ] 황금 자물쇠 인트로
 - [ ] 스크롤 카메라 연출 · 인터랙션

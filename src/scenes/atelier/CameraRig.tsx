@@ -65,11 +65,15 @@ function exhibitShot(exhibit: TourExhibit, aspect: number, vfovDeg: number): Sho
 
 /**
  * 구간별 이동 곡선 — 직선 보간 위에 더하는 완만한 우회.
- * 전체 → 작품: 살짝 떠오름 / 작품 → 작품: 뒤로 물러나 홀을 가로지르며 가운데 전시대도 스쳐 보이게
+ * 전체 → 작품 1: 살짝 떠오름
+ * 작품 1 → 2: 뒤로 물러나 홀을 가로지르며 가운데 전시대도 스쳐 보이게
+ * 작품 2 → 3: 스마트폰에서 크게 물러나 홀의 깊이를 보여준 뒤, 안쪽 중앙 전시대로 다가감
+ * (back 은 +z = 입구 쪽. 이동 경로는 기둥(x=±5.6)과 전시대 사이의 빈 바닥 위만 지납니다)
  */
 const SEGMENT_ARC = [
   { lift: 0.22, back: 0 },
   { lift: 0.18, back: 1.4 },
+  { lift: 0.32, back: 1.9 },
 ]
 
 const easeInOutSine = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2

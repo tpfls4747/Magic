@@ -34,7 +34,7 @@ export const tour = {
 }
 
 /** 투어 순서 — 전체 구도(정류장 0) 다음에 들르는 작품 (projects.ts 의 id) */
-export const TOUR_PROJECT_IDS = ['seat-swap', 'signup-redesign'] as const
+export const TOUR_PROJECT_IDS = ['seat-swap', 'signup-redesign', 'web-prototype'] as const
 export type TourProjectId = (typeof TOUR_PROJECT_IDS)[number]
 
 /** 투어에 포함된 작품 데이터 (투어 순서) */
@@ -52,11 +52,14 @@ export const stopOfProject = (id: TourProjectId) => TOUR_PROJECT_IDS.indexOf(id)
 // ─────────────────────────────────────────────
 
 let activeStop: number | null = GALLERY_STOP
+/** 정류장에 도착하거나 떠날 때마다 1씩 증가 — '같은 방문 동안만 유지할 상태'의 기준 */
+let activeVisit = 0
 const listeners = new Set<() => void>()
 
 export function setActiveStop(stop: number | null) {
   if (stop === activeStop) return
   activeStop = stop
+  activeVisit += 1
   listeners.forEach((l) => l())
 }
 
@@ -67,6 +70,11 @@ const subscribe = (l: () => void) => {
 
 export function useActiveStop() {
   return useSyncExternalStore(subscribe, () => activeStop, () => GALLERY_STOP)
+}
+
+/** 현재 방문 번호 — 작품을 떠났다 다시 오면 바뀝니다 */
+export function useActiveVisit() {
+  return useSyncExternalStore(subscribe, () => activeVisit, () => 0)
 }
 
 // ─────────────────────────────────────────────

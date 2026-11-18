@@ -83,18 +83,21 @@ const webYaw = yawToward(wx, wz, OVERVIEW_CAMERA)
 
 /**
  * 작품 3 — Web Prototype (뒤쪽 중앙 전시대의 3D 브라우저)
- * 아직 스크롤 투어에는 연결하지 않았지만, 연결할 때 바로 쓸 수 있도록 TourExhibit 형태로 둡니다.
  */
 export const WEB_PROTOTYPE = {
   /** 브라우저 중심 — 아래쪽이 상판 위로 약 0.18m 떠 있도록 (높이 0.86m) */
   center: new THREE.Vector3(wx, PEDESTAL_TOP + 0.61, wz),
   yaw: webYaw,
-  viewYaw: webYaw,
-  /** 레이어가 펼쳐졌을 때까지 포함한 범위 */
-  extent: { width: 1.5, height: 1.0 },
+  /**
+   * 근접 화면은 오른쪽에서 약 13° 비스듬히 — 골드 측면의 두께가 보이고,
+   * 펼칠 때 브라우저가 반대쪽으로 돌아서면서(약 23°) 레이어의 깊이가 크게 드러납니다.
+   */
+  viewYaw: webYaw + 0.22,
+  /** 펼친 UI 레이어(최대 46cm 앞, 좌우로 비켜남)까지 포함한 범위 */
+  extent: { width: 1.62, height: 1.04 },
   framing: {
-    landscape: { w: 0.42, h: 0.5, x: 0.34, y: 0.48 },
-    portrait: { w: 0.86, h: 0.32, x: 0.5, y: 0.3 },
+    landscape: { w: 0.44, h: 0.52, x: 0.33, y: 0.48 },
+    portrait: { w: 0.9, h: 0.3, x: 0.5, y: 0.29 },
   },
 } as const
 
@@ -105,4 +108,5 @@ export const WEB_PROTOTYPE = {
 export const EXHIBIT_LAYOUT: Record<TourProjectId, TourExhibit> = {
   'seat-swap': { ...SEAT_SWAP, viewYaw: SEAT_SWAP.yaw },
   'signup-redesign': SIGN_UP,
+  'web-prototype': WEB_PROTOTYPE,
 }

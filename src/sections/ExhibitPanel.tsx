@@ -6,7 +6,10 @@ import './ExhibitPanel.css'
 const EXHIBIT_HINT: Record<ExhibitObject, { hover: string; touch: string }> = {
   'golden-ticket': { hover: '티켓에 마우스를 올려 보세요', touch: '티켓을 탭해 보세요' },
   smartphone: { hover: '스마트폰에 마우스를 올려 보세요', touch: '스마트폰을 탭해 보세요' },
-  browser: { hover: '작품에 마우스를 올려 보세요', touch: '작품을 탭해 보세요' },
+  browser: {
+    hover: '브라우저를 클릭해 레이어를 펼쳐 보세요',
+    touch: '브라우저를 탭해 레이어를 펼쳐 보세요',
+  },
 }
 
 /**
