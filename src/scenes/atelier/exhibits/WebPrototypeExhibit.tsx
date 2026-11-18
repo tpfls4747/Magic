@@ -128,6 +128,7 @@ export function WebPrototypeExhibit({
 }) {
   const floatRef = useRef<THREE.Group>(null)
   const turnRef = useRef<THREE.Group>(null)
+  const glassRef = useRef<THREE.Mesh>(null)
   const hover = useRef(0)
   const open = useRef(0)
   const tilt = useRef({ x: 0, y: 0 })
@@ -283,6 +284,14 @@ export function WebPrototypeExhibit({
       }
     })
 
+    // 화면 유리: 레이어가 유리 앞으로 떠오르는 동안 반사를 줄여, 떠오른 레이어가 뿌옇게 바래지 않게 함
+    // (닫힌 상태에서는 유리가 콘텐츠 위에 있는 것이 맞으므로 원래 세기로 돌아옴)
+    if (glassRef.current) {
+      const separated = easeInOutCubic(clamp01((o - LAYER_START) / LAYER_DURATION))
+      asMaterial(glassRef.current).opacity = 1 - separated
+      glassRef.current.visible = separated < 0.999
+    }
+
     // 브라우저: 느린 부유 + 마우스 쪽 미세 기울기 + hover 시 살짝 앞으로 + ① 펼칠 때 돌아서기
     const e = easeInOutCubic(clamp01(o / TURN_END))
     if (floatRef.current) {
@@ -307,7 +316,7 @@ export function WebPrototypeExhibit({
     <group position={WEB_PROTOTYPE.center} rotation-y={WEB_PROTOTYPE.yaw}>
       <group ref={floatRef}>
         <group ref={turnRef}>
-          <Browser address={ADDRESS_TEXT} castShadow={castShadow}>
+          <Browser address={ADDRESS_TEXT} castShadow={castShadow} glassRef={glassRef}>
             <mesh geometry={geometry.background} renderOrder={2}>
               <meshBasicMaterial map={page.background} color={SCREEN_TINT} toneMapped={false} />
             </mesh>

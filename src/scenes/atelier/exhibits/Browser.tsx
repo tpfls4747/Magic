@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, type ReactNode } from 'react'
+import { forwardRef, useEffect, useMemo, type ReactNode, type Ref } from 'react'
 import * as THREE from 'three'
 import { goldTrimMaterial } from '../materials'
 import { BROWSER, BROWSER_FACE_Z, SCREEN, SCREEN_LIP, TOOLBAR } from './browserGeometry'
@@ -185,10 +185,15 @@ export interface BrowserProps {
   castShadow?: boolean
   /** 화면 콘텐츠 (화면 중심 원점, z=0 이 화면 표면, +z 가 바깥) */
   children?: ReactNode
+  /**
+   * 화면 유리 메시 — 유리보다 앞으로 떠오른 콘텐츠가 있을 때 바깥에서 반사 세기를 조절할 수 있도록.
+   * (유리는 가산 혼합으로 마지막에 그려지므로 그대로 두면 떠오른 레이어 위에도 반사가 얹힘)
+   */
+  glassRef?: Ref<THREE.Mesh>
 }
 
 export const Browser = forwardRef<THREE.Group, BrowserProps>(function Browser(
-  { address, castShadow = true, children },
+  { address, castShadow = true, children, glassRef },
   ref,
 ) {
   shared ??= build()
@@ -240,7 +245,13 @@ export const Browser = forwardRef<THREE.Group, BrowserProps>(function Browser(
           <meshBasicMaterial color="#e9e3d9" toneMapped={false} />
         </mesh>
         <group position-z={0.0012}>{children}</group>
-        <mesh geometry={g.screen} material={browserGlassMaterial} position-z={0.0042} renderOrder={20} />
+        <mesh
+          ref={glassRef}
+          geometry={g.screen}
+          material={browserGlassMaterial}
+          position-z={0.0042}
+          renderOrder={20}
+        />
       </group>
     </group>
   )
