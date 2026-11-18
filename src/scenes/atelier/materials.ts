@@ -53,12 +53,13 @@ export const champagneGoldMaterial = new THREE.MeshPhysicalMaterial({
   metalness: 1,
   roughness: 0.3,
   // 선반 가공한 듯한 원형 결 — 하이라이트가 가로로 부드럽게 퍼집니다.
-  anisotropy: 0.55,
+  // 상판의 방사형 하이라이트가 번쩍이지 않도록 결과 래커를 조금 누그러뜨림
+  anisotropy: 0.38,
   anisotropyRotation: Math.PI / 2,
   // 얇은 래커층: 넓고 부드러운 금속 반사 위에 맺히는 선명한 하이라이트
-  clearcoat: 0.35,
-  clearcoatRoughness: 0.08,
-  envMapIntensity: 1.5,
+  clearcoat: 0.25,
+  clearcoatRoughness: 0.1,
+  envMapIntensity: 1.3,
 })
 
 /** 가는 금색 장식선 (조금 더 밝고 반짝임) */
@@ -123,9 +124,10 @@ export const screenGlassMaterial = new THREE.MeshPhysicalMaterial({
   color: '#000000',
   roughness: 0.05,
   metalness: 0,
-  clearcoat: 1,
-  clearcoatRoughness: 0.03,
-  envMapIntensity: 2.2,
+  // 반사가 강하면 화면 UI 전체가 뿌옇게 밝아져 대비가 떨어지므로 유리 느낌만 남길 정도로
+  clearcoat: 0.6,
+  clearcoatRoughness: 0.05,
+  envMapIntensity: 1.3,
   transparent: true,
   depthWrite: false,
   blending: THREE.AdditiveBlending,

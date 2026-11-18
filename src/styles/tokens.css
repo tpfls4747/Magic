@@ -7,7 +7,8 @@
   --color-gold-deep: #a8874f;
   --color-ink: #3a3140;
   --color-ink-soft: rgba(58, 49, 64, 0.72);
-  --color-lavender-ink: #7f6cb3;
+  /* 작은 대문자 레이블용 — 아이보리 위 대비 약 6.6:1 (이전 #7f6cb3 은 약 4.2:1) */
+  --color-lavender-ink: #5f4d99;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
   --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;

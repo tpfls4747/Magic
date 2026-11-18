@@ -36,7 +36,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  opacity: 0.68;
+  opacity: 0.86;
   transition:
     opacity 0.25s ease,
     background-color 0.25s ease;
@@ -149,5 +149,13 @@
     font-size: 10.5px;
     letter-spacing: 0.16em;
     backdrop-filter: blur(6px);
+  }
+}
+
+/* 터치 기기: 메뉴 버튼·바로가기 높이 최소 44px */
+@media (hover: none), (pointer: coarse) {
+  .works-nav__toggle,
+  .works-shortcuts__item {
+    min-height: 44px;
   }
 }

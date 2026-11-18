@@ -33,6 +33,17 @@
   font-size: 11px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
+  isolation: isolate;
+}
+
+/* 밝은 볼트 천장 위에서도 상단 글자가 읽히도록 위쪽에 옅은 아이보리 그라데이션 */
+.hero-overlay__bar::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -28px;
+  background: linear-gradient(180deg, rgba(246, 240, 231, 0.7) 0%, rgba(246, 240, 231, 0) 100%);
+  pointer-events: none;
 }
 
 .hero-overlay__mark {
@@ -50,6 +61,26 @@
   text-align: center;
   padding: 0 16px;
   transform: translateY(var(--reveal-y, 0px));
+  isolation: isolate;
+}
+
+/* 타이틀 뒤 은은한 아이보리 번짐 — 바로 뒤에 비치는 중앙 전시대·브라우저의 바닥 반사가 글자와 겹쳐 보이지 않도록 */
+.hero-overlay__title::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  width: min(980px, 96vw);
+  height: 150%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(247, 241, 232, 0.66) 0%,
+    rgba(247, 241, 232, 0.4) 55%,
+    rgba(247, 241, 232, 0) 100%
+  );
+  pointer-events: none;
 }
 
 .hero-overlay__title h1:focus {
@@ -63,12 +94,13 @@
   }
 }
 
+
 .hero-overlay__eyebrow {
   margin: 0 0 14px;
   font-size: 11px;
   letter-spacing: 0.36em;
   text-transform: uppercase;
-  opacity: 0.7;
+  opacity: 0.86;
 }
 
 .hero-overlay__title h1 {
@@ -95,10 +127,10 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .hero-overlay__hint i {
@@ -125,6 +157,27 @@
   .hero-overlay__eyebrow {
     margin-bottom: 8px;
     font-size: 9px;
+  }
+  .hero-overlay__hint {
+    display: none;
+  }
+}
+
+/*
+ * 세로가 짧은 휴대폰 (예: 360×640) — 전시대가 화면의 약 61% 높이에 오므로
+ * 타이틀 묶음이 그 아래 빈 바닥에 들어가도록 낮추고, 바로가기가 있으니 스크롤 안내는 생략
+ * (기본 규칙보다 뒤에 두어야 적용되므로 파일 끝에 위치)
+ */
+@media (max-width: 760px) and (max-height: 720px) {
+  .hero-overlay__title {
+    bottom: 22px;
+  }
+  .hero-overlay__eyebrow {
+    margin-bottom: 8px;
+    font-size: 10px;
+  }
+  .hero-overlay__title h1 {
+    font-size: clamp(32px, 9.5vw, 40px);
   }
   .hero-overlay__hint {
     display: none;

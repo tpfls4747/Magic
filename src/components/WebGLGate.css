@@ -1,0 +1,47 @@
+/* WebGL 을 쓸 수 없을 때의 정적인 전시관 배경 */
+.webgl-fallback {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 62%, rgba(255, 250, 240, 0.9), rgba(255, 250, 240, 0) 70%),
+    linear-gradient(180deg, #e6dcd4 0%, #efe6da 46%, #e8dccb 100%);
+}
+
+/* 아치 세 개의 실루엣 — 3D 전시관의 분위기만 은은하게 */
+.webgl-fallback__arches {
+  position: absolute;
+  left: 50%;
+  bottom: 38%;
+  display: flex;
+  gap: clamp(16px, 4vw, 56px);
+  transform: translateX(-50%);
+  /* 설명 패널 뒤로 지나가도 글자를 방해하지 않을 만큼만 */
+  opacity: 0.55;
+}
+
+.webgl-fallback__arches span {
+  width: clamp(60px, 12vw, 160px);
+  height: clamp(110px, 24vw, 300px);
+  border: 1.5px solid rgba(168, 135, 79, 0.45);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, rgba(207, 195, 230, 0.35), rgba(250, 246, 238, 0));
+}
+
+.webgl-fallback__arches span:nth-child(2) {
+  height: clamp(140px, 30vw, 380px);
+}
+
+.webgl-fallback__note {
+  position: absolute;
+  left: 50%;
+  top: clamp(72px, 12vh, 110px);
+  width: min(560px, calc(100% - 32px));
+  margin: 0;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}

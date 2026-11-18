@@ -104,7 +104,7 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   cursor: pointer;
-  opacity: 0.78;
+  opacity: 0.92;
   transition: opacity 0.25s ease;
 }
 
@@ -257,5 +257,13 @@
   }
   .exhibit-panel__actions {
     margin-top: 2px;
+  }
+}
+
+/* 터치 기기: 버튼 높이 최소 44px */
+@media (hover: none), (pointer: coarse) {
+  .case-button,
+  .back-button {
+    min-height: 44px;
   }
 }

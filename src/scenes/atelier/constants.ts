@@ -32,7 +32,8 @@ export const PALETTE = {
   cream: '#f3ebdd',
   plaster: '#e6dac7',
   stone: '#e9ddca',
-  floor: '#e8dccb',
+  /** 벽(plaster)보다 한 단계 깊은 대리석 톤 — 바닥과 벽의 명도 차이로 공간 깊이를 읽히게 */
+  floor: '#e1d3bf',
   champagne: '#dcc08e',
   champagneLight: '#ecd7a8',
   lavender: '#cfc3e6',

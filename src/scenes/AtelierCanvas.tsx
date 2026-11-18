@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useState } from 'react'
 import * as THREE from 'three'
+import { WebGLGate } from '@/components/WebGLGate'
 import { usePrefersReducedMotion, useQuality } from '@/hooks/useMediaQuery'
 import { Architecture } from './atelier/Architecture'
 import { Atmosphere } from './atelier/Atmosphere'
@@ -22,32 +23,34 @@ export function AtelierCanvas() {
   const animate = !reducedMotion
 
   return (
-    <div className={`atelier-canvas${ready ? ' is-ready' : ''}`}>
-      <Canvas
-        shadows="percentage"
-        dpr={quality === 'high' ? [1, 1.75] : [1, 1.5]}
-        gl={{
-          antialias: true,
-          powerPreference: 'high-performance',
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 0.92,
-        }}
-        onCreated={() => requestAnimationFrame(() => setReady(true))}
-      >
-        <color attach="background" args={[PALETTE.fog]} />
-        <fog attach="fog" args={[PALETTE.fog, 22, 62]} />
-        <CameraRig enableParallax={animate} reducedMotion={reducedMotion} />
-        <Suspense fallback={null}>
-          <Lighting quality={quality} />
-          <Architecture />
-          <Floor quality={quality} />
-          <Pedestals />
-          <SeatSwapExhibit animate={animate} castShadow={quality === 'high'} />
-          <SignupExhibit animate={animate} castShadow={quality === 'high'} />
-          <WebPrototypeExhibit animate={animate} castShadow={quality === 'high'} />
-          <Atmosphere quality={quality} animate={animate} />
-        </Suspense>
-      </Canvas>
-    </div>
+    <WebGLGate>
+      <div className={`atelier-canvas${ready ? ' is-ready' : ''}`}>
+        <Canvas
+          shadows="percentage"
+          dpr={quality === 'high' ? [1, 1.75] : [1, 1.5]}
+          gl={{
+            antialias: true,
+            powerPreference: 'high-performance',
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 0.92,
+          }}
+          onCreated={() => requestAnimationFrame(() => setReady(true))}
+        >
+          <color attach="background" args={[PALETTE.fog]} />
+          <fog attach="fog" args={[PALETTE.fog, 22, 62]} />
+          <CameraRig enableParallax={animate} reducedMotion={reducedMotion} />
+          <Suspense fallback={null}>
+            <Lighting quality={quality} />
+            <Architecture />
+            <Floor quality={quality} />
+            <Pedestals />
+            <SeatSwapExhibit animate={animate} castShadow={quality === 'high'} />
+            <SignupExhibit animate={animate} castShadow={quality === 'high'} />
+            <WebPrototypeExhibit animate={animate} castShadow={quality === 'high'} />
+            <Atmosphere quality={quality} animate={animate} />
+          </Suspense>
+        </Canvas>
+      </div>
+    </WebGLGate>
   )
 }
