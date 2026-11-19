@@ -24,6 +24,13 @@ export interface ContactContent {
   backToBeginning: string
   /** 메일 제목 기본값 */
   mailSubject: string
+  /** 사이트 자동 진입 뒤 나타나는 Contact 전용 화면 */
+  finale: {
+    eyebrow: string
+    /** 줄 단위 — 두 번째 줄은 이탤릭 금색으로 강조 */
+    titleLines: string[]
+    lead: string
+  }
   a11y: {
     sectionLabel: string
     doorHint: string
@@ -49,6 +56,11 @@ export const CONTACT_CONTENT: ContactContent = {
   closeDoor: 'Close Door',
   backToBeginning: 'Back to the Beginning',
   mailSubject: 'Hello from Unlock My World',
+  finale: {
+    eyebrow: 'Contact — Beyond My World',
+    titleLines: ["Let's Create", 'Something Magical.'],
+    lead: "Have a project in mind? Let's connect.",
+  },
   a11y: {
     sectionLabel: 'Contact — 다음 문 열기',
     doorHint: '문을 열면 연락처가 나타납니다. 문 자체를 눌러도 열립니다.',

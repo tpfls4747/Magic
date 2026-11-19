@@ -14,10 +14,12 @@ export interface DoorAnim {
   hover: number
   /** 마우스 패럴랙스 허용 */
   parallax: number
+  /** 카메라가 열린 문을 통과해 문 너머로 들어간 정도 (사이트의 자동 진입 연출) */
+  pass: number
 }
 
 export function createDoorAnim(): DoorAnim {
-  return { handle: 0, unlatch: 0, leaf: 0, light: 0, cam: 0, hover: 0, parallax: 1 }
+  return { handle: 0, unlatch: 0, leaf: 0, light: 0, cam: 0, hover: 0, parallax: 1, pass: 0 }
 }
 
 /** 장면 시계 (미리보기에서 느리게 재생할 때 scale 조절) */

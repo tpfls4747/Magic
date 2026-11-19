@@ -19,6 +19,11 @@ export interface DoorSceneProps {
   interactive: boolean
   onActivate: () => void
   onHover: (hovering: boolean) => void
+  /**
+   * 'side'(기본): 열리면 문이 한쪽으로 비켜서고 남은 자리에 연락처 패널 (독립 미리보기)
+   * 'pass': 문이 가운데에서 열리고, anim.pass 에 따라 카메라가 열린 문을 지나 문 너머로 전진 (사이트)
+   */
+  framing?: 'side' | 'pass'
 }
 
 const FOV = 35
@@ -37,7 +42,17 @@ const REGIONS = {
   // 열림: 문이 커지며 오른쪽(가로) / 위쪽(세로)으로, 남은 자리에 연락처 패널
   openLandscape: { x0: 0.52, x1: 0.94, y0: 0.07, y1: 0.9 },
   openPortrait: { x0: 0.1, x1: 0.9, y0: 0.5, y1: 0.98 },
+  // 통과 모드: 문이 화면 가운데에서 다가옴 (그대로 정면으로 전진하기 위해)
+  passLandscape: { x0: 0.26, x1: 0.74, y0: 0.04, y1: 0.86 },
+  passPortrait: { x0: 0.02, x1: 0.98, y0: 0.08, y1: 0.82 },
 } satisfies Record<string, Region>
+
+/**
+ * 문을 통과한 뒤 카메라가 멈추는 곳 — 눈높이에서 문 너머 빛의 하늘(z=-6)을 바라봄.
+ * 세로 화면은 이동 거리를 줄여 짧고 가볍게.
+ */
+const PASS_EYE_Y = 1.55
+const PASS_END_Z = { landscape: -3.4, portrait: -1.6 }
 
 /**
  * 문+문틀 상자를 화면의 region 에 정확히 맞추는 카메라 위치.
@@ -58,7 +73,11 @@ function frameCamera(aspect: number, r: Region, out: THREE.Vector3) {
 const _a = new THREE.Vector3()
 const _b = new THREE.Vector3()
 
-function CameraRig({ anim, animate }: { anim: DoorAnim; animate: boolean }) {
+const _c = new THREE.Vector3()
+const _look = new THREE.Vector3()
+const _lookEnd = new THREE.Vector3(0, PASS_EYE_Y, -12)
+
+function CameraRig({ anim, animate, framing }: { anim: DoorAnim; animate: boolean; framing: 'side' | 'pass' }) {
   const { camera, size, pointer } = useThree()
   const sp = useRef(new THREE.Vector2())
   useFrame((_, dt) => {
@@ -69,14 +88,24 @@ function CameraRig({ anim, animate }: { anim: DoorAnim; animate: boolean }) {
     const cam = camera as THREE.PerspectiveCamera
     const aspect = size.width / size.height
     const portrait = aspect < 0.9
+    const pass = framing === 'pass'
     frameCamera(aspect, portrait ? REGIONS.closedPortrait : REGIONS.closedLandscape, _a)
-    frameCamera(aspect, portrait ? REGIONS.openPortrait : REGIONS.openLandscape, _b)
+    const open = pass ? (portrait ? REGIONS.passPortrait : REGIONS.passLandscape) : portrait ? REGIONS.openPortrait : REGIONS.openLandscape
+    frameCamera(aspect, open, _b)
     _a.lerp(_b, anim.cam)
 
     sp.current.lerp(pointer, 1 - Math.exp(-d * 3))
     const par = animate ? anim.parallax : 0
-    cam.position.set(_a.x + sp.current.x * 0.25 * par, _a.y + sp.current.y * 0.12 * par, _a.z)
-    cam.lookAt(_a.x + sp.current.x * 0.08 * par, _a.y, 0)
+    const x = _a.x + sp.current.x * 0.25 * par
+    const y = _a.y + sp.current.y * 0.12 * par
+    _look.set(_a.x + sp.current.x * 0.08 * par, _a.y, 0)
+    if (pass && anim.pass > 0) {
+      // 열린 문 한가운데를 지나 문 너머로 — 문틀과 문짝은 화면 가장자리로 밀려나며 사라짐
+      _c.set(0, PASS_EYE_Y, portrait ? PASS_END_Z.portrait : PASS_END_Z.landscape)
+      cam.position.set(x, y, _a.z).lerp(_c, anim.pass)
+      _look.lerp(_lookEnd, anim.pass)
+    } else cam.position.set(x, y, _a.z)
+    cam.lookAt(_look)
   })
   return null
 }
@@ -95,7 +124,7 @@ function StudioLight() {
   )
 }
 
-export function DoorScene({ anim, animate, lowQuality, interactive, onActivate, onHover }: DoorSceneProps) {
+export function DoorScene({ anim, animate, lowQuality, interactive, onActivate, onHover, framing = 'side' }: DoorSceneProps) {
   const materials = useMemo(() => createDoorMaterials(), [])
   useEffect(() => () => materials.dispose(), [materials])
   const shadows = !lowQuality
@@ -132,7 +161,7 @@ export function DoorScene({ anim, animate, lowQuality, interactive, onActivate, 
   return (
     <>
       <color attach="background" args={['#ece6de']} />
-      <CameraRig anim={anim} animate={animate} />
+      <CameraRig anim={anim} animate={animate} framing={framing} />
       <StudioLight />
       <hemisphereLight args={['#ffffff', '#ddd8e4', 0.42]} />
       <directionalLight

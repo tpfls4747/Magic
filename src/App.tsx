@@ -45,8 +45,10 @@ function focusSpace(space: Space) {
     target = document.getElementById(`${SPACE_HASH.process.slice(1)}-title`)
     target?.setAttribute('tabindex', '-1')
   } else if (space === 'contact') {
-    target = document.getElementById(SPACE_HASH.contact.slice(1))
-    target?.setAttribute('tabindex', '-1')
+    // Contact 화면이 이미 나타났으면(동작 줄이기 · 3D 미지원) 그 제목으로, 아니면 섹션으로
+    const title = document.querySelector<HTMLElement>('.cn-contact.is-open .cn-screen__title')
+    target = title ?? document.getElementById(SPACE_HASH.contact.slice(1))
+    if (!title) target?.setAttribute('tabindex', '-1')
   } else target = document.querySelector<HTMLElement>('[data-tour="hero-title"] h1')
   target?.focus({ preventScroll: true })
 }
@@ -227,6 +229,9 @@ function App() {
   const handleContactReady = useCallback(() => setReadyFor('contact'), [])
   const handleBack = useCallback(() => requestSpace('gallery'), [requestSpace])
 
+  // 공간이 화면에 드러나기 시작했는지 (Intro 의 빛 · 전환 막이 걷히는 중이거나 다 걷힘) — Contact 문 자동 열림 시점
+  const spaceRevealed = stage === 'gallery' ? veilShown === 'out' || veilShown === 'hidden' : stage === 'covered' && revealSignal
+
   // 빛이나 막 아래에서 준비되는 동안에는 페이드 없이 바로 그림 (준비가 늦어 먼저 걷히면 평소처럼 서서히)
   const hiddenUnderCover = (stage === 'covered' && !revealSignal) || veilShown === 'in' || veilShown === 'covered'
 
@@ -246,7 +251,7 @@ function App() {
             <Suspense fallback={<div style={{ minHeight: '100vh', background: '#ece2d6' }} />}>
               {space === 'desk' && <DesignersDesk onReady={handleDeskReady} onBack={handleBack} />}
               {space === 'process' && <ProcessBoard onReady={handleProcessReady} onBack={handleBack} />}
-              {space === 'contact' && <ContactDoor onReady={handleContactReady} onBack={handleBack} />}
+              {space === 'contact' && <ContactDoor onReady={handleContactReady} onBack={handleBack} revealed={spaceRevealed} />}
             </Suspense>
           )}
         </main>

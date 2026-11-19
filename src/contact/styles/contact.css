@@ -468,3 +468,257 @@
     transition: none;
   }
 }
+
+/* ── 사이트 자동 진입: 문을 지나 들어온 뒤의 Contact 전용 화면 ─────────────────
+ * 문 너머 하늘과 같은 아이보리 · 라벤더 빛 위에, 샴페인 골드 선으로 정리한 에디토리얼 구성.
+ * 처음엔 숨김 (진입 연출이 autoAlpha 로 드러냄 — 숨김 동안 탭 이동 · 화면 낭독기에서도 제외)
+ */
+.cn-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  padding: max(96px, 12svh) 24px max(40px, 6svh);
+  overflow-y: auto;
+  visibility: hidden;
+  opacity: 0;
+  background:
+    radial-gradient(60% 55% at 50% 42%, rgba(255, 252, 244, 0.98) 0%, rgba(255, 250, 240, 0.6) 55%, rgba(255, 250, 240, 0) 80%),
+    radial-gradient(90% 70% at 50% 110%, rgba(214, 200, 240, 0.55), rgba(214, 200, 240, 0) 70%),
+    linear-gradient(180deg, #f8f2e8 0%, #f1e9e3 55%, #e7ddf0 100%);
+}
+
+/* 지나온 문을 기억하게 하는 아주 옅은 아치 선 (장식) */
+.cn-screen__arch {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(760px, 86vw);
+  height: min(86svh, 980px);
+  transform: translate(-50%, -46%);
+  border: 1px solid rgba(201, 160, 97, 0.28);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0 / 46% 46% 0 0;
+  pointer-events: none;
+}
+.cn-screen__arch::before {
+  content: '';
+  position: absolute;
+  inset: 14px 14px 0;
+  border: 1px solid rgba(201, 160, 97, 0.14);
+  border-bottom: 0;
+  border-radius: inherit;
+}
+
+.cn-screen__inner {
+  position: relative;
+  width: min(680px, 100%);
+  text-align: center;
+}
+
+.cn-screen__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 22px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--cn-lavender-ink);
+}
+.cn-screen__eyebrow::before,
+.cn-screen__eyebrow::after {
+  content: '';
+  width: 36px;
+  height: 1px;
+  background: var(--cn-gold);
+}
+
+.cn-screen__title {
+  margin: 0;
+  font-family: var(--cn-serif);
+  font-weight: 400;
+  font-size: clamp(46px, 6.4vw, 96px);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  color: var(--cn-ink);
+  outline: none;
+}
+.cn-screen__title span,
+.cn-screen__title em {
+  display: block;
+}
+.cn-screen__title em {
+  font-style: italic;
+  color: var(--cn-gold-deep);
+}
+
+.cn-screen__lead {
+  margin: 22px auto 0;
+  max-width: 30em;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.7;
+  color: var(--cn-ink-soft);
+}
+
+/* 연락 수단 — 금색 헤어라인으로 구분한 큰 행 */
+.cn-screen__rows {
+  margin: clamp(30px, 5svh, 48px) auto 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid rgba(201, 160, 97, 0.45);
+  text-align: left;
+}
+.cn-row-item {
+  border-bottom: 1px solid rgba(201, 160, 97, 0.45);
+}
+.cn-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 76px;
+  padding: 14px 6px;
+  color: var(--cn-ink);
+  text-decoration: none;
+  transition:
+    background-color 0.3s ease,
+    padding 0.35s ease;
+}
+a.cn-row:hover {
+  background: rgba(255, 255, 255, 0.5);
+  padding-left: 14px;
+  padding-right: 14px;
+}
+a.cn-row:focus-visible {
+  outline: 2px solid var(--cn-lavender-ink);
+  outline-offset: 2px;
+}
+.cn-row__label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--cn-gold-deep);
+}
+.cn-row__value {
+  font-family: var(--cn-serif);
+  font-size: clamp(22px, 2.1vw, 30px);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.cn-row__value.is-pending {
+  font-style: italic;
+  color: var(--cn-ink-faint);
+}
+.cn-row__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cn-ink-soft);
+  white-space: nowrap;
+}
+.cn-row__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(143, 109, 59, 0.5);
+  border-radius: 50%;
+  font-size: 14px;
+  letter-spacing: 0;
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s ease;
+}
+a.cn-row:hover .cn-row__arrow {
+  transform: translateX(3px);
+  background: var(--cn-ink);
+  border-color: var(--cn-ink);
+  color: var(--cn-ivory);
+}
+.cn-row.is-pending {
+  cursor: default;
+}
+.cn-row.is-pending .cn-row__action {
+  color: var(--cn-ink-faint);
+}
+.cn-row.is-pending .cn-row__arrow {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.cn-screen__note {
+  margin: 18px 0 0;
+  font-size: 12px;
+  color: var(--cn-ink-faint);
+}
+
+/* 세로 화면 (모바일): 제목 크기 · 행 배치 조정 */
+@media (max-aspect-ratio: 9/10), (max-width: 640px) {
+  .cn-screen {
+    padding: 92px 20px max(28px, env(safe-area-inset-bottom));
+    place-items: start center;
+    align-content: center;
+  }
+  .cn-screen__eyebrow {
+    margin-bottom: 16px;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    gap: 10px;
+  }
+  .cn-screen__eyebrow::before,
+  .cn-screen__eyebrow::after {
+    width: 20px;
+  }
+  .cn-screen__title {
+    font-size: clamp(40px, 11.5vw, 58px);
+  }
+  .cn-screen__lead {
+    margin-top: 16px;
+    font-size: 15px;
+  }
+  .cn-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label action'
+      'value action';
+    row-gap: 4px;
+    min-height: 72px;
+    padding: 12px 4px;
+  }
+  .cn-row__label {
+    grid-area: label;
+  }
+  .cn-row__value {
+    grid-area: value;
+    font-size: 22px;
+  }
+  .cn-row__action {
+    grid-area: action;
+    font-size: 0;
+    gap: 0;
+  }
+  .cn-row__arrow {
+    width: 44px;
+    height: 44px;
+    font-size: 15px;
+  }
+  .cn-screen__arch {
+    width: 92vw;
+    height: 78svh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cn-row,
+  .cn-row__arrow {
+    transition: none;
+  }
+}

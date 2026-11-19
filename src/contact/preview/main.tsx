@@ -6,6 +6,7 @@
  * 쿼리
  *   ?debug                 이벤트 로그 표시
  *   ?email=a@b.com&linkedin=https://...   연락처가 연결된 상태 미리보기 (저장되지 않음)
+ *   ?auto                  사이트와 같은 자동 진입 (문 자동 열림 → 문 통과 → Contact 화면)
  */
 import '@fontsource/cormorant-garamond/300.css'
 import '@fontsource/cormorant-garamond/400.css'
@@ -19,6 +20,7 @@ import './preview.css'
 
 const params = new URLSearchParams(location.search)
 const debug = params.has('debug')
+const auto = params.has('auto')
 const links = {
   ...(params.get('email') ? { email: params.get('email')! } : {}),
   ...(params.get('linkedin') ? { linkedin: params.get('linkedin')! } : {}),
@@ -41,6 +43,7 @@ function Preview() {
     <>
       <ContactSection
         links={links}
+        autoOpen={auto}
         onPhaseChange={setPhase}
         onOpenStart={(m) => push(`onOpenStart:${m}`)}
         onOpened={() => push('onOpened')}

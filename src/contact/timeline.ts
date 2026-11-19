@@ -23,6 +23,75 @@ export const DOOR_TIMING = {
 const stagger = (panel: HTMLElement | null) => (panel ? panel.querySelectorAll<HTMLElement>('[data-stagger]') : [])
 
 /**
+ * 문이 열리는 연출 (손잡이 → 걸쇠 → 천천히 열림 + 빛 + 카메라 접근).
+ * 수동 열기(buildOpenTimeline)와 사이트 자동 진입(buildEnterTimeline)이 똑같이 씁니다.
+ */
+function addDoorOpening(tl: gsap.core.Timeline, anim: DoorAnim, intro: HTMLElement | null, cta: HTMLElement | null) {
+  const T = DOOR_TIMING
+  tl.to(intro, { autoAlpha: 0, y: -16, duration: 0.7, ease: 'power2.inOut' }, 0)
+  if (cta) tl.to(cta, { autoAlpha: 0, y: 12, duration: 0.5, ease: 'power2.in' }, 0)
+  tl.to(anim, { parallax: 0, duration: 0.8, ease: 'power2.out' }, 0)
+    .to(anim, { hover: 0.7, duration: 0.3 }, 0)
+    // 1) 손잡이가 실제로 내려감
+    .to(anim, { handle: 1, duration: 0.38, ease: 'power2.out' }, T.handleDown)
+    // 2) 걸쇠가 풀리며 문이 살짝 밀렸다가 숨을 고름 — 문틈 빛이 먼저 번짐
+    .to(anim, { unlatch: 1, duration: 0.12, ease: 'power2.out' }, T.unlatch)
+    .to(anim, { unlatch: 0.45, duration: 0.4, ease: 'sine.inOut' }, T.unlatch + 0.12)
+    .to(anim, { light: 0.16, duration: 0.45, ease: 'sine.out' }, T.unlatch)
+    // 3) 힌지 축을 중심으로 천천히 열림 + 빛이 퍼짐 + 카메라가 다가감
+    .to(anim, { leaf: 1, duration: T.swingEnd - T.swingStart, ease: 'power2.inOut' }, T.swingStart)
+    .to(anim, { unlatch: 0, duration: 0.8, ease: 'sine.out' }, T.swingStart + 0.2)
+    .to(anim, { handle: 0, duration: 0.55, ease: 'power2.inOut' }, 1.2)
+    .to(anim, { hover: 0, duration: 0.8 }, 1.0)
+    .to(anim, { light: 1, duration: 2.1, ease: 'power2.inOut' }, T.swingStart + 0.05)
+    .to(anim, { cam: 1, duration: 2.6, ease: 'power2.inOut' }, 0.7)
+}
+
+/** 자동 진입 연출의 시점(초) — 데스크톱 / 세로 화면 */
+export const ENTER_TIMING = {
+  /** 문이 충분히 열린 뒤(약 85%) 카메라가 문 안쪽으로 전진 시작 */
+  passStart: { wide: 2.5, compact: 2.3 },
+  passDuration: { wide: 1.8, compact: 1.2 },
+  /** 전진 중 문틀을 지나는 즈음 Contact 화면이 빛처럼 번져 나옴 (전진 진행 비율) */
+  screenAt: { wide: 0.62, compact: 0.5 },
+} as const
+
+/**
+ * 사이트 자동 진입: 문이 스스로 열림 → 카메라가 열린 문을 지나 전진 → 문과 문틀이 화면 밖으로 → Contact 화면.
+ *  compact: 세로 화면 — 전진 거리·시간을 줄임 (거리는 DoorScene 의 PASS_END_Z)
+ *  reduced: 동작 줄이기 — 이동 없이 Contact 화면을 곧바로 표시
+ */
+export function buildEnterTimeline(
+  anim: DoorAnim,
+  el: { intro: HTMLElement | null; screen: HTMLElement | null },
+  opts: { reduced: boolean; compact: boolean },
+) {
+  const tl = gsap.timeline()
+  if (opts.reduced) {
+    tl.set(el.intro, { autoAlpha: 0 }, 0)
+      .set(anim, { handle: 0, unlatch: 0, leaf: 1, light: 1, cam: 1, pass: 1, parallax: 0, hover: 0 }, 0)
+      .set(stagger(el.screen), { autoAlpha: 1, y: 0 }, 0)
+      .fromTo(el.screen, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, ease: 'power1.out' }, 0)
+    return tl
+  }
+  const k = opts.compact ? 'compact' : 'wide'
+  const E = ENTER_TIMING
+  addDoorOpening(tl, anim, el.intro, null)
+  const passAt = E.passStart[k]
+  const passDur = E.passDuration[k]
+  // 천천히 출발해 문틀을 지날 때 가장 빠르고, 문 너머에서 부드럽게 멈춤
+  tl.to(anim, { pass: 1, duration: passDur, ease: 'power2.inOut' }, passAt)
+  const screenAt = passAt + passDur * E.screenAt[k]
+  tl.fromTo(el.screen, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.9, ease: 'power1.inOut' }, screenAt).fromTo(
+    stagger(el.screen),
+    { autoAlpha: 0, y: 18 },
+    { autoAlpha: 1, y: 0, duration: 0.75, stagger: 0.1, ease: 'power2.out' },
+    screenAt + 0.35,
+  )
+  return tl
+}
+
+/**
  * 문 열기.
  *  cinematic: 손잡이가 내려감 → 걸쇠가 풀리며 문이 살짝 들썩 → 천천히 열림 + 빛 + 카메라 접근 → 연락처
  *  instant:   (바로 보기 / 동작 줄이기) 긴 연출 없이 열린 상태와 연락처를 곧바로 표시
@@ -39,25 +108,9 @@ export function buildOpenTimeline(anim: DoorAnim, el: DoorTargets, mode: 'cinema
       .set(stagger(el.panel), { autoAlpha: 1, y: 0 }, 0)
     return tl
   }
-  tl.to(el.intro, { autoAlpha: 0, y: -16, duration: 0.7, ease: 'power2.inOut' }, 0)
-    .to(el.cta, { autoAlpha: 0, y: 12, duration: 0.5, ease: 'power2.in' }, 0)
-    .to(anim, { parallax: 0, duration: 0.8, ease: 'power2.out' }, 0)
-    .to(anim, { hover: 0.7, duration: 0.3 }, 0)
-    // 1) 손잡이가 실제로 내려감
-    .to(anim, { handle: 1, duration: 0.38, ease: 'power2.out' }, T.handleDown)
-    // 2) 걸쇠가 풀리며 문이 살짝 밀렸다가 숨을 고름 — 문틈 빛이 먼저 번짐
-    .to(anim, { unlatch: 1, duration: 0.12, ease: 'power2.out' }, T.unlatch)
-    .to(anim, { unlatch: 0.45, duration: 0.4, ease: 'sine.inOut' }, T.unlatch + 0.12)
-    .to(anim, { light: 0.16, duration: 0.45, ease: 'sine.out' }, T.unlatch)
-    // 3) 힌지 축을 중심으로 천천히 열림 + 빛이 퍼짐 + 카메라가 다가감
-    .to(anim, { leaf: 1, duration: T.swingEnd - T.swingStart, ease: 'power2.inOut' }, T.swingStart)
-    .to(anim, { unlatch: 0, duration: 0.8, ease: 'sine.out' }, T.swingStart + 0.2)
-    .to(anim, { handle: 0, duration: 0.55, ease: 'power2.inOut' }, 1.2)
-    .to(anim, { hover: 0, duration: 0.8 }, 1.0)
-    .to(anim, { light: 1, duration: 2.1, ease: 'power2.inOut' }, T.swingStart + 0.05)
-    .to(anim, { cam: 1, duration: 2.6, ease: 'power2.inOut' }, 0.7)
-    // 4) 연락처 등장
-    .fromTo(el.panel, { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: 'power2.out' }, T.panelIn)
+  addDoorOpening(tl, anim, el.intro, el.cta)
+  // 4) 연락처 등장
+  tl.fromTo(el.panel, { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: 'power2.out' }, T.panelIn)
     .fromTo(stagger(el.panel), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.07, ease: 'power2.out' }, T.panelIn + 0.15)
   return tl
 }

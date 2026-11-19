@@ -14,11 +14,12 @@ import {
 import * as THREE from 'three'
 import { createDoorAnim } from './animState'
 import { ContactPanel } from './components/ContactPanel'
+import { ContactScreen } from './components/ContactScreen'
 import { CONTACT_CONTENT, type ContactContent } from './data/content'
 import { CONTACT_LINKS, type ContactLinks } from './data/links'
 import { CONTACT_EVENTS, emitContactEvent, type ContactCallbacks, type DoorPhase } from './events'
 import { DoorScene } from './scene/DoorScene'
-import { buildCloseTimeline, buildOpenTimeline } from './timeline'
+import { buildCloseTimeline, buildEnterTimeline, buildOpenTimeline, ENTER_TIMING } from './timeline'
 import './styles/contact.css'
 
 export interface ContactSectionProps extends ContactCallbacks {
@@ -33,7 +34,19 @@ export interface ContactSectionProps extends ContactCallbacks {
   onReady?: () => void
   /** false: 3D 문 없이 소개 · 버튼 · 연락처만 표시 (WebGL 을 쓸 수 없을 때). 기본: 지원 여부 자동 확인 */
   webgl?: boolean
+  /**
+   * true 가 되면 문이 스스로 열리고, 카메라가 열린 문을 지나 문 너머로 들어간 뒤
+   * Contact 전용 화면(ContactScreen)이 나타납니다 (사이트에서는 공간 전환의 빛이 걷히는 순간).
+   * 자동 모드에서는 '문 열기 · 바로 보기 · 닫기' 같은 수동 조작이 없고, 들어온 뒤 문은 다시 나타나지 않습니다.
+   * false/생략: 원래의 수동 흐름과 연락처 패널 (독립 미리보기)
+   */
+  autoOpen?: boolean
+  /** 자동 모드에서 진입 연출을 시작해도 되는지 (기본 true) — 사이트는 공간 전환의 빛이 걷히기 시작할 때 true */
+  startSignal?: boolean
 }
+
+/** 닫힌 문을 잠깐 보여 준 뒤 열기 시작 (초) — 빛이 걷히는 동안 문이 이미 열려 버리지 않도록 */
+const AUTO_OPEN_DELAY = 0.6
 
 function canUseWebGL() {
   try {
@@ -73,7 +86,7 @@ function useMedia(query: string) {
  * Unlock My World — Contact · Open the Next Door.
  * 실제 3D 아치형 문을 열면 연락처가 나타나는 마지막 섹션. 독립 모듈로, 이벤트로만 외부와 통신합니다.
  */
-export function ContactSection({ content: contentOverride, links: linksOverride, id = 'contact', className, onReady, webgl: webglProp, ...callbacks }: ContactSectionProps) {
+export function ContactSection({ content: contentOverride, links: linksOverride, id = 'contact', className, onReady, webgl: webglProp, autoOpen = false, startSignal = true, ...callbacks }: ContactSectionProps) {
   const content = useMemo(() => ({ ...CONTACT_CONTENT, ...contentOverride }), [contentOverride])
   const links = useMemo(() => ({ ...CONTACT_LINKS, ...linksOverride }), [linksOverride])
   const reduced = useMedia('(prefers-reduced-motion: reduce)')
@@ -86,7 +99,16 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
   const phaseRef = useRef<DoorPhase>('closed')
   const [announce, setAnnounce] = useState('')
   const [ready, setReady] = useState(false)
+  /** 문 장면의 첫 프레임들이 실제로 그려졌는지 — 자동 열림은 이 뒤에 시작 */
+  const [drawn, setDrawn] = useState(false)
+  const handleDrawn = useCallback(() => {
+    setDrawn(true)
+    onReady?.()
+  }, [onReady])
   const [visible, setVisible] = useState(true)
+  /** 자동 진입이 끝나 Contact 화면만 남음 — 3D 문 장면은 언마운트해 GPU 를 비움 (문은 다시 나타나지 않음) */
+  const [arrived, setArrived] = useState(false)
+  const screenRef = useRef<HTMLDivElement>(null)
 
   const sectionRef = useRef<HTMLElement>(null)
   const introRef = useRef<HTMLDivElement>(null)
@@ -110,9 +132,9 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
     cbRef.current.onPhaseChange?.(p)
   }, [])
 
-  // 패널은 처음엔 숨김 (GSAP autoAlpha → visibility:hidden 이라 화면 낭독기·탭 이동에서도 제외)
+  // 패널 · Contact 화면은 처음엔 숨김 (GSAP autoAlpha → visibility:hidden 이라 화면 낭독기·탭 이동에서도 제외)
   useLayoutEffect(() => {
-    gsap.set(panelRef.current, { autoAlpha: 0 })
+    gsap.set([panelRef.current, screenRef.current].filter(Boolean), { autoAlpha: 0 })
   }, [])
 
   // 화면 밖에 있을 때는 렌더 루프를 멈춰 성능 확보
@@ -156,6 +178,40 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
     [anim, content.a11y.opened, reduced, setPhase, titleId],
   )
 
+  /** 자동 진입 마무리 — Contact 화면을 확정하고 문 장면을 정리 */
+  const arrive = useCallback(() => {
+    if (phaseRef.current === 'open') return
+    gsap.set(screenRef.current, { autoAlpha: 1 })
+    gsap.set(screenRef.current?.querySelectorAll('[data-stagger]') ?? [], { autoAlpha: 1, y: 0 })
+    gsap.set(introRef.current, { autoAlpha: 0 })
+    setPhase('open')
+    setArrived(true)
+    setAnnounce(content.a11y.opened)
+    // 사용자가 그사이 다른 곳으로 옮긴 초점은 빼앗지 않음
+    const active = document.activeElement
+    if (!active || active === document.body || active === sectionRef.current) {
+      document.getElementById(titleId)?.focus({ preventScroll: true })
+    }
+    cbRef.current.onOpened?.()
+    emitContactEvent(CONTACT_EVENTS.opened)
+  }, [content.a11y.opened, setPhase, titleId])
+
+  /** 자동 진입: 문이 스스로 열림 → 카메라가 문을 지나 전진 → Contact 화면 (동작 줄이기 · 3D 없음: 곧바로) */
+  const enter = useCallback(() => {
+    const p = phaseRef.current
+    if (p === 'open' || p === 'opening') return
+    tlRef.current?.kill()
+    setPhase('opening')
+    setAnnounce('')
+    const instant = reduced || !webgl
+    cbRef.current.onOpenStart?.(instant ? 'instant' : 'cinematic')
+    emitContactEvent(CONTACT_EVENTS.openStart)
+    const compact = window.matchMedia('(max-aspect-ratio: 9/10)').matches
+    const tl = buildEnterTimeline(anim, { intro: introRef.current, screen: screenRef.current }, { reduced: instant, compact })
+    tl.eventCallback('onComplete', arrive)
+    tlRef.current = tl
+  }, [anim, arrive, reduced, setPhase, webgl])
+
   const close = useCallback(() => {
     const p = phaseRef.current
     if (p === 'closed' || p === 'closing') return
@@ -185,15 +241,42 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
     close()
   }, [close])
 
-  // ESC 로 닫기
+  // 자동 진입: 빛이 걷히면 (3D 가 없으면 바로) 시작
+  const autoStarted = useRef(false)
   useEffect(() => {
+    if (!autoOpen || !startSignal || autoStarted.current) return
+    if (webgl && !drawn) return
+    autoStarted.current = true
+    const delay = !webgl || reduced ? 0 : AUTO_OPEN_DELAY * 1000
+    const start = window.setTimeout(enter, delay)
+    // 안전장치: 어떤 이유로든 연출이 끝나지 않으면 Contact 화면을 곧바로 표시
+    const longest = ENTER_TIMING.passStart.wide + ENTER_TIMING.passDuration.wide + 1.2
+    const safety = window.setTimeout(
+      () => {
+        if (phaseRef.current === 'open') return
+        tlRef.current?.kill()
+        arrive()
+      },
+      delay + (longest + 2.5) * 1000,
+    )
+    return () => {
+      window.clearTimeout(start)
+      window.clearTimeout(safety)
+      // 아직 시작하지 않았다면 다음 실행에서 다시 시작 (개발 모드의 이중 실행 대비)
+      if (phaseRef.current === 'closed') autoStarted.current = false
+    }
+  }, [autoOpen, startSignal, drawn, webgl, reduced, enter, arrive])
+
+  // ESC 로 닫기 (수동 모드만 — 자동 모드에서는 문이 열린 채 연락처가 머묾)
+  useEffect(() => {
+    if (autoOpen) return
     if (phase !== 'open' && phase !== 'opening') return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [phase, close])
+  }, [autoOpen, phase, close])
 
   const setHover = useCallback(
     (on: boolean) => {
@@ -210,11 +293,11 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
     <section
       ref={sectionRef}
       id={id}
-      className={`cn-contact is-${phase}${ready || !webgl ? ' is-ready' : ''}${webgl ? '' : ' is-flat'}${className ? ` ${className}` : ''}`}
+      className={`cn-contact is-${phase}${ready || !webgl ? ' is-ready' : ''}${webgl ? '' : ' is-flat'}${autoOpen ? ' is-auto' : ''}${className ? ` ${className}` : ''}`}
       aria-label={content.a11y.sectionLabel}
     >
       <div className="cn-canvas" aria-hidden="true">
-        {webgl && (
+        {webgl && !arrived && (
         <Canvas
           // three r187 에서 PCFSoft 가 제거되어 어차피 PCF 로 대체됨 — 같은 결과를 직접 지정해 콘솔 경고 제거
           shadows={!lowQuality ? 'percentage' : false}
@@ -230,10 +313,11 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
               animate={!reduced}
               lowQuality={lowQuality}
               interactive={phase === 'closed'}
-              onActivate={() => open('cinematic')}
+              onActivate={() => (autoOpen ? enter() : open('cinematic'))}
               onHover={setHover}
+              framing={autoOpen ? 'pass' : 'side'}
             />
-            <FirstFrames onDone={onReady} />
+            <FirstFrames onDone={handleDrawn} />
           </Suspense>
         </Canvas>
         )}
@@ -251,6 +335,8 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
       </div>
 
       <div ref={ctaRef} className="cn-cta-row">
+        {!autoOpen && (
+          <>
         <button
           ref={ctaButtonRef}
           type="button"
@@ -272,17 +358,29 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
         <p id={hintId} className="cn-sr">
           {content.a11y.doorHint}
         </p>
+          </>
+        )}
       </div>
 
-      <ContactPanel
-        ref={panelRef}
-        content={content}
-        links={links}
-        titleId={titleId}
-        onClose={close}
-        onBack={back}
-        onContactClick={(m) => cbRef.current.onContactClick?.(m)}
-      />
+      {autoOpen ? (
+        <ContactScreen
+          ref={screenRef}
+          content={content}
+          links={links}
+          titleId={titleId}
+          onContactClick={(m) => cbRef.current.onContactClick?.(m)}
+        />
+      ) : (
+        <ContactPanel
+          ref={panelRef}
+          content={content}
+          links={links}
+          titleId={titleId}
+          onClose={close}
+          onBack={back}
+          onContactClick={(m) => cbRef.current.onContactClick?.(m)}
+        />
+      )}
 
       <p className="cn-sr" aria-live="polite">
         {announce}
