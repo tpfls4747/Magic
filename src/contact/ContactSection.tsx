@@ -244,7 +244,8 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
   // 자동 진입: 빛이 걷히면 (3D 가 없으면 바로) 시작
   const autoStarted = useRef(false)
   useEffect(() => {
-    if (!autoOpen || !startSignal || autoStarted.current) return
+    // 도착하면(arrived) 정리 함수가 돌아 남은 안전 타이머까지 해제됨
+    if (!autoOpen || !startSignal || autoStarted.current || arrived) return
     if (webgl && !drawn) return
     autoStarted.current = true
     const delay = !webgl || reduced ? 0 : AUTO_OPEN_DELAY * 1000
@@ -265,7 +266,7 @@ export function ContactSection({ content: contentOverride, links: linksOverride,
       // 아직 시작하지 않았다면 다음 실행에서 다시 시작 (개발 모드의 이중 실행 대비)
       if (phaseRef.current === 'closed') autoStarted.current = false
     }
-  }, [autoOpen, startSignal, drawn, webgl, reduced, enter, arrive])
+  }, [autoOpen, startSignal, drawn, webgl, reduced, enter, arrive, arrived])
 
   // ESC 로 닫기 (수동 모드만 — 자동 모드에서는 문이 열린 채 연락처가 머묾)
   useEffect(() => {
